@@ -1,5 +1,81 @@
 scalar JSON
 
 type Analysis {
-    id: ID!
+    analysisId: ID
+    analysisType: String
+    analysisVersion: Int
+    analysisState: String
+    program: String
+    run: Run
+    samples: [Donor]
+    files: [File]
+}
+
+type File {
+    fileId: ID
+    objectId: String
+    name: String
+    size: Int
+    md5sum: String
+    fileType: String
+    fileAccess: String
+    dataType: String
+    analysis: Analysis
+}
+
+type Sample {
+    sampleId: ID
+    submitterSampleId: String
+    sampleType: String
+    matchedNormalSubmitterSampleId: String
+    specimens: [Specimen]
+}
+
+type Specimen {
+    specimenId: ID
+    submitterSpecimenId: String
+    tumourNormalDesignation: String,
+    specimenTissueSource: String
+    specimenType: String
+    donors: [Donor]
+}
+
+type Donor {
+    donorId: ID
+    submitterDonorId: String
+    sex: String
+}
+
+input AnalysisFilter {
+    analysisId: String
+    programId: String
+    donorId: String
+    sampleId: String
+    specimenId: String
+    runId: String
+}
+
+input FileFilter {
+    fileId: String
+    objectId: String
+    analysisId: String
+    programId: String
+    donorId: String
+    name: String
+    fileAccess: String
+    dataType: String
+}
+
+input Page {
+    size: Int!
+    from: Int!
+}
+
+extend type Run @key(fields: "runName") {
+    runName: ID! @external
+}
+
+extend type Query {
+    analyses(filter: AnalysisFilter, page: Page): [Analysis]
+    files(filter: FileFilter, page: Page): [File]
 }

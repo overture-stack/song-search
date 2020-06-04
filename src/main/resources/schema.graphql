@@ -6,7 +6,6 @@ type Analysis {
     analysisVersion: Int
     analysisState: String
     program: String
-    run: Run
     samples: [Donor]
     files: [File]
 }
@@ -69,10 +68,6 @@ input FileFilter {
 input Page {
     size: Int!
     from: Int!
-}
-
-extend type Run @key(fields: "runName") {
-    runName: ID! @external
 }
 
 extend type Query {

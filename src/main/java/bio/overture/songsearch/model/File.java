@@ -11,28 +11,28 @@ import java.util.Map;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class File {
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+  private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    private String fileId;
+  private String fileId;
 
-    private String objectId;
+  private String objectId;
 
-    private String name;
+  private String name;
 
-    private Integer size;
+  private Integer size;
 
-    private String md5sum;
+  private String md5sum;
 
-    private String fileType;
+  private String fileType;
 
-    private String fileAccess;
+  private String fileAccess;
 
-    private String dataType;
+  private String dataType;
 
-    private Analysis analysis;
+  private Analysis analysis;
 
-    @SneakyThrows
-    public static File parse(@NonNull Map<String, Object> sourceMap) {
-        return MAPPER.convertValue(sourceMap, File.class);
-    }
+  @SneakyThrows
+  public static File parse(@NonNull Map<String, Object> sourceMap) {
+    return MAPPER.convertValue(sourceMap, File.class);
+  }
 }

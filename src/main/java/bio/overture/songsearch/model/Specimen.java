@@ -12,22 +12,22 @@ import java.util.Map;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Specimen {
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+  private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    private String specimenId;
+  private String specimenId;
 
-    private String submitterSpecimenId;
+  private String submitterSpecimenId;
 
-    private String tumourNormalDesignation;
+  private String tumourNormalDesignation;
 
-    private String specimenTissueSource;
+  private String specimenTissueSource;
 
-    private String specimenType;
+  private String specimenType;
 
-    private List<Donor> donors;
+  private List<Donor> donors;
 
-    @SneakyThrows
-    public static Specimen parse(@NonNull Map<String, Object> sourceMap) {
-        return MAPPER.convertValue(sourceMap, Specimen.class);
-    }
+  @SneakyThrows
+  public static Specimen parse(@NonNull Map<String, Object> sourceMap) {
+    return MAPPER.convertValue(sourceMap, Specimen.class);
+  }
 }

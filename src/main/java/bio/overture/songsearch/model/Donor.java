@@ -11,16 +11,16 @@ import java.util.Map;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Donor {
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+  private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    private String donorId;
+  private String donorId;
 
-    private String submitterDonorId;
+  private String submitterDonorId;
 
-    private String sex;
+  private String sex;
 
-    @SneakyThrows
-    public static Donor parse(@NonNull Map<String, Object> sourceMap) {
-        return MAPPER.convertValue(sourceMap, Donor.class);
-    }
+  @SneakyThrows
+  public static Donor parse(@NonNull Map<String, Object> sourceMap) {
+    return MAPPER.convertValue(sourceMap, Donor.class);
+  }
 }

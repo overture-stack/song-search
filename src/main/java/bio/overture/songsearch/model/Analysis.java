@@ -12,24 +12,24 @@ import java.util.Map;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Analysis {
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+  private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    private String analysisId;
+  private String analysisId;
 
-    private String analysisType;
+  private String analysisType;
 
-    private Integer analysisVersion;
+  private Integer analysisVersion;
 
-    private String analysisState;
+  private String analysisState;
 
-    private String program;
+  private String program;
 
-    private List<Donor> samples;
+  private List<Donor> samples;
 
-    private List<File> files;
+  private List<File> files;
 
-    @SneakyThrows
-    public static Analysis parse(@NonNull Map<String, Object> sourceMap) {
-        return MAPPER.convertValue(sourceMap, Analysis.class);
-    }
+  @SneakyThrows
+  public static Analysis parse(@NonNull Map<String, Object> sourceMap) {
+    return MAPPER.convertValue(sourceMap, Analysis.class);
+  }
 }

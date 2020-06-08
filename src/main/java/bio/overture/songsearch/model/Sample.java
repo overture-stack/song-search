@@ -12,20 +12,20 @@ import java.util.Map;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Sample {
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+  private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    private String sampleId;
+  private String sampleId;
 
-    private String submitterSampleId;
+  private String submitterSampleId;
 
-    private String sampleType;
+  private String sampleType;
 
-    private String matchedNormalSubmitterSampleId;
+  private String matchedNormalSubmitterSampleId;
 
-    private List<Specimen> specimens;
+  private List<Specimen> specimens;
 
-    @SneakyThrows
-    public static Sample parse(@NonNull Map<String, Object> sourceMap) {
-        return MAPPER.convertValue(sourceMap, Sample.class);
-    }
+  @SneakyThrows
+  public static Sample parse(@NonNull Map<String, Object> sourceMap) {
+    return MAPPER.convertValue(sourceMap, Sample.class);
+  }
 }

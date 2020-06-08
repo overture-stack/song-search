@@ -4,6 +4,7 @@ import bio.overture.songsearch.model.Analysis;
 import bio.overture.songsearch.repository.AnalysisRepository;
 import lombok.val;
 import org.elasticsearch.search.SearchHit;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -18,6 +19,7 @@ public class AnalysisService {
 
   private final AnalysisRepository analysisRepository;
 
+  @Autowired
   public AnalysisService(AnalysisRepository analysisRepository) {
     this.analysisRepository = analysisRepository;
   }

@@ -24,7 +24,7 @@ public class AnalysisService {
     this.analysisRepository = analysisRepository;
   }
 
-  private static Analysis hitToRun(SearchHit hit) {
+  private static Analysis hitToAnalysis(SearchHit hit) {
     val sourceMap = hit.getSourceAsMap();
     return Analysis.parse(sourceMap);
   }
@@ -32,12 +32,13 @@ public class AnalysisService {
   public List<Analysis> getAnalyses(Map<String, Object> filter, Map<String, Integer> page) {
     val response = analysisRepository.getAnalyses(filter, page);
     val hitStream = Arrays.stream(response.getHits().getHits());
-    return hitStream.map(AnalysisService::hitToRun).collect(toUnmodifiableList());
+    return hitStream.map(AnalysisService::hitToAnalysis).collect(toUnmodifiableList());
   }
 
   public Analysis getAnalysisById(String analysisId) {
-      val response = analysisRepository.getAnalyses(Map.of(ANALYSIS_ID, analysisId), null);
-      val runOpt = Arrays.stream(response.getHits().getHits()).map(AnalysisService::hitToRun).findFirst();
-      return runOpt.orElse(null);
+    val response = analysisRepository.getAnalyses(Map.of(ANALYSIS_ID, analysisId), null);
+    val runOpt =
+        Arrays.stream(response.getHits().getHits()).map(AnalysisService::hitToAnalysis).findFirst();
+    return runOpt.orElse(null);
   }
 }

@@ -22,14 +22,15 @@ import static graphql.schema.idl.TypeRuntimeWiring.newTypeWiring;
 @Service
 public class GraphQLProvider {
 
+  private final AnalysisDataFetcher analysisDataFetcher;
+  private final FileDataFetcher fileDataFetcher;
   private GraphQL graphQL;
   private GraphQLSchema graphQLSchema;
 
-  private final AnalysisDataFetcher analysisDataFetcher;
-
   @Autowired
-  public GraphQLProvider(AnalysisDataFetcher analysisDataFetcher) {
+  public GraphQLProvider(AnalysisDataFetcher analysisDataFetcher, FileDataFetcher fileDataFetcher) {
     this.analysisDataFetcher = analysisDataFetcher;
+    this.fileDataFetcher = fileDataFetcher;
   }
 
   @Bean
@@ -55,6 +56,9 @@ public class GraphQLProvider {
         .type(
             newTypeWiring("Query")
                 .dataFetcher("analyses", analysisDataFetcher.getAnalysesDataFetcher()))
+        .type(
+            newTypeWiring("Query")
+                .dataFetcher("files", fileDataFetcher.getFilesDataFetcher()))
         .build();
   }
 }

@@ -8,12 +8,15 @@ import graphql.scalars.ExtendedScalars;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.idl.RuntimeWiring;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.net.URL;
+
+import static graphql.schema.idl.TypeRuntimeWiring.newTypeWiring;
 
 @Slf4j
 @Service
@@ -22,7 +25,12 @@ public class GraphQLProvider {
   private GraphQL graphQL;
   private GraphQLSchema graphQLSchema;
 
-  public GraphQLProvider() {}
+  private final AnalysisDataFetcher analysisDataFetcher;
+
+  @Autowired
+  public GraphQLProvider(AnalysisDataFetcher analysisDataFetcher) {
+    this.analysisDataFetcher = analysisDataFetcher;
+  }
 
   @Bean
   public GraphQL graphQL() {
@@ -42,6 +50,11 @@ public class GraphQLProvider {
   }
 
   private RuntimeWiring buildWiring() {
-    return RuntimeWiring.newRuntimeWiring().scalar(ExtendedScalars.Json).build();
+    return RuntimeWiring.newRuntimeWiring()
+        .scalar(ExtendedScalars.Json)
+        .type(
+            newTypeWiring("Query")
+                .dataFetcher("analyses", analysisDataFetcher.getAnalysesDataFetcher()))
+        .build();
   }
 }

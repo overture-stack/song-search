@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 
+import java.util.List;
 import java.util.Map;
 
 @Data
@@ -17,7 +18,9 @@ public class Donor {
 
   private String submitterDonorId;
 
-  private String sex;
+  private String gender;
+
+  private List<Specimen> specimens;
 
   @SneakyThrows
   public static Donor parse(@NonNull Map<String, Object> sourceMap) {

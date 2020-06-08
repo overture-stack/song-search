@@ -16,15 +16,15 @@ public class Specimen {
 
   private String specimenId;
 
+  private String specimenType;
+
   private String submitterSpecimenId;
+
+  private List<Sample> samples;
 
   private String tumourNormalDesignation;
 
   private String specimenTissueSource;
-
-  private String specimenType;
-
-  private List<Donor> donors;
 
   @SneakyThrows
   public static Specimen parse(@NonNull Map<String, Object> sourceMap) {

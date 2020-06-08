@@ -6,30 +6,25 @@ import lombok.Data;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 
-import java.util.List;
 import java.util.Map;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Analysis {
+public class FileMeta {
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
-  private String analysisId;
+  private String name;
 
-  private String analysisType;
+  private String md5sum;
 
-  private Integer analysisVersion;
+  private Integer size;
 
-  private String analysisState;
+  private String dataType;
 
-  private String studyId;
-
-  private List<Donor> donors;
-
-  private List<File> files;
+  private String indexFile;
 
   @SneakyThrows
-  public static Analysis parse(@NonNull Map<String, Object> sourceMap) {
-    return MAPPER.convertValue(sourceMap, Analysis.class);
+  public static FileMeta parse(@NonNull Map<String, Object> sourceMap) {
+    return MAPPER.convertValue(sourceMap, FileMeta.class);
   }
 }

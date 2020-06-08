@@ -22,8 +22,6 @@ public class Sample {
 
   private String matchedNormalSubmitterSampleId;
 
-  private List<Specimen> specimens;
-
   @SneakyThrows
   public static Sample parse(@NonNull Map<String, Object> sourceMap) {
     return MAPPER.convertValue(sourceMap, Sample.class);

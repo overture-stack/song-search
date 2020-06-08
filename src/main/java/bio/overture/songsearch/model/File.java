@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 
+import java.util.List;
 import java.util.Map;
 
 @Data
@@ -13,23 +14,23 @@ import java.util.Map;
 public class File {
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
-  private String fileId;
-
   private String objectId;
 
-  private String name;
+  private String studyId;
 
-  private Integer size;
-
-  private String md5sum;
+  private String dataType;
 
   private String fileType;
 
   private String fileAccess;
 
-  private String dataType;
-
   private Analysis analysis;
+
+  private FileMeta file;
+
+  private List<Repository> repositories;
+
+  private List<Donor> donors;
 
   @SneakyThrows
   public static File parse(@NonNull Map<String, Object> sourceMap) {

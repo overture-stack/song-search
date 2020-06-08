@@ -11,7 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import static bio.overture.songsearch.config.SearchFields.FILE_ID;
+import static bio.overture.songsearch.config.SearchFields.FILE_OBJECT_ID;
 import static java.util.stream.Collectors.toUnmodifiableList;
 
 @Service
@@ -34,8 +34,8 @@ public class FileService {
     return hitStream.map(FileService::hitToFile).collect(toUnmodifiableList());
   }
 
-  public File getFileById(String fileId) {
-    val response = fileRepository.getFiles(Map.of(FILE_ID, fileId), null);
+  public File getFileByObjectId(String fileId) {
+    val response = fileRepository.getFiles(Map.of(FILE_OBJECT_ID, fileId), null);
     val runOpt =
         Arrays.stream(response.getHits().getHits()).map(FileService::hitToFile).findFirst();
     return runOpt.orElse(null);

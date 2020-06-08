@@ -5,21 +5,25 @@ type Analysis {
     analysisType: String
     analysisVersion: Int
     analysisState: String
-    program: String
-    samples: [Donor]
+    studyId: String
+    donors: [Donor]
     files: [File]
 }
 
-type File {
-    fileId: ID
-    objectId: String
-    name: String
-    size: Int
-    md5sum: String
-    fileType: String
-    fileAccess: String
-    dataType: String
-    analysis: Analysis
+type Donor {
+    donorId: ID
+    submitterDonorId: String
+    gender: String
+    specimens: [Specimen]
+}
+
+type Specimen {
+    specimenId: ID
+    specimenType: String
+    submitterSpecimenId: String
+    samples: [Sample]
+    tumourNormalDesignation: String
+    specimenTissueSource: String
 }
 
 type Sample {
@@ -27,27 +31,41 @@ type Sample {
     submitterSampleId: String
     sampleType: String
     matchedNormalSubmitterSampleId: String
-    specimens: [Specimen]
 }
 
-type Specimen {
-    specimenId: ID
-    submitterSpecimenId: String
-    tumourNormalDesignation: String,
-    specimenTissueSource: String
-    specimenType: String
+type File {
+    objectId: String
+    studyId: String
+    dataType: String
+    fileType: String
+    fileAccess: String
+    analysis: Analysis
+    file: FileMeta
+    repositories: [Repository]
     donors: [Donor]
 }
 
-type Donor {
-    donorId: ID
-    submitterDonorId: String
-    sex: String
+type FileMeta {
+    name: String
+    md5sum: String
+    size: Int
+    dataType: String
+    indexFile: String
 }
+
+type Repository {
+    code: String
+    organization: String
+    name: String
+    type: String
+    country: String
+    url: String
+}
+
 
 input AnalysisFilter {
     analysisId: String
-    programId: String
+    studyId: String
     donorId: String
     sampleId: String
     specimenId: String
@@ -58,7 +76,7 @@ input FileFilter {
     fileId: String
     objectId: String
     analysisId: String
-    programId: String
+    studyId: String
     donorId: String
     name: String
     fileAccess: String

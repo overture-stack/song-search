@@ -6,11 +6,13 @@ import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.AbstractQueryBuilder;
+import org.elasticsearch.index.query.NestedQueryBuilder;
 import org.elasticsearch.index.query.TermQueryBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +45,16 @@ public class FileRepository {
   private static Map<String, Function<String, AbstractQueryBuilder<?>>> argumentPathMap() {
     return ImmutableMap.<String, Function<String, AbstractQueryBuilder<?>>>builder()
         .put(FILE_OBJECT_ID, value -> new TermQueryBuilder("object_id", value))
+        .put(FILE_NAME, value -> new TermQueryBuilder("file.name", value))
+        .put(FILE_ACCESS, value -> new TermQueryBuilder("file_access", value))
+        .put(FILE_DATA_TYPE, value -> new TermQueryBuilder("data_type", value))
+        .put(STUDY_ID, value -> new TermQueryBuilder("study_id", value))
+        .put(ANALYSIS_ID, value -> new TermQueryBuilder("analysis.analysis_id", value))
+        .put(
+            DONOR_ID,
+            value ->
+                new NestedQueryBuilder(
+                    "donors", new TermQueryBuilder("donors.donor_id", value), ScoreMode.None))
         .build();
   }
 

@@ -6,11 +6,13 @@ import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.AbstractQueryBuilder;
+import org.elasticsearch.index.query.NestedQueryBuilder;
 import org.elasticsearch.index.query.TermQueryBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,6 +48,22 @@ public class AnalysisRepository {
         .put(ANALYSIS_TYPE, value -> new TermQueryBuilder("analysis_type", value))
         .put(ANALYSIS_VERSION, value -> new TermQueryBuilder("analysis_version", value))
         .put(ANALYSIS_STATE, value -> new TermQueryBuilder("analysis_state", value))
+        .put(STUDY_ID, value -> new TermQueryBuilder("study_id", value))
+        .put(
+            DONOR_ID,
+            value ->
+                new NestedQueryBuilder(
+                    "donors", new TermQueryBuilder("donors.donor_id", value), ScoreMode.None))
+        .put(
+            SPECIMEN_ID,
+            value ->
+                new NestedQueryBuilder(
+                    "donors.specimens", new TermQueryBuilder("donors.specimens.specimen_id", value), ScoreMode.None))
+        .put(
+            SAMPLE_ID,
+            value ->
+                new NestedQueryBuilder(
+                    "donors.specimens.samples", new TermQueryBuilder("donors.specimens.samples.sample_id", value), ScoreMode.None))
         .build();
   }
 

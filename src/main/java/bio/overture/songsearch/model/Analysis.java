@@ -29,10 +29,23 @@ public class Analysis {
 
   private List<Donor> donors;
 
-  private List<File> files;
+  private List<AnalysisFile> files;
 
   @SneakyThrows
   public static Analysis parse(@NonNull Map<String, Object> sourceMap) {
     return MAPPER.convertValue(sourceMap, Analysis.class);
+  }
+
+  @Data
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
+  public static final class AnalysisFile {
+    private String objectId;
+    private String name;
+    private Integer size;
+    private String fileType;
+    private String md5Sum;
+    private String fileAccess;
+    private String dataType;
   }
 }

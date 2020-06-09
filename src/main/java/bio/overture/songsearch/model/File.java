@@ -39,4 +39,27 @@ public class File {
   public static File parse(@NonNull Map<String, Object> sourceMap) {
     return MAPPER.convertValue(sourceMap, File.class);
   }
+
+  @Data
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
+  public static final class FileMeta {
+    private String name;
+    private String md5sum;
+    private Integer size;
+    private String dataType;
+    private IndexFile indexFile;
+  }
+
+  @Data
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
+  public static final class IndexFile {
+    private String objectId;
+    private String name;
+    private String fileType;
+    private String md5sum;
+    private String dataType;
+    private Integer size;
+  }
 }

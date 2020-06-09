@@ -7,7 +7,7 @@ type Analysis {
     analysisState: String
     studyId: String
     donors: [Donor]
-    files: [File]
+    files: [AnalysisFile]
 }
 
 type Donor {
@@ -15,6 +15,16 @@ type Donor {
     submitterDonorId: String
     gender: String
     specimens: [Specimen]
+}
+
+type AnalysisFile {
+    objectId: String
+    name: String
+    size: Int
+    fileType: String
+    md5Sum: String
+    fileAccess: String
+    dataType: String
 }
 
 type Specimen {
@@ -50,7 +60,16 @@ type FileMeta {
     md5sum: String
     size: Int
     dataType: String
-    indexFile: String
+    indexFile: IndexFile
+}
+
+type IndexFile {
+    objectId: String
+    name: String
+    fileType: String
+    md5sum: String
+    dataType: String
+    size: Int
 }
 
 type Repository {
@@ -61,7 +80,6 @@ type Repository {
     country: String
     url: String
 }
-
 
 input AnalysisFilter {
     analysisId: String

@@ -9,6 +9,11 @@ type Analysis {
     studyId: String
     donors: [Donor]
     files: [AnalysisFile]
+    repositories: [Repository]
+    experiment: Experiment
+    readGroupCount: Int
+    readGroups: [ReadGroup]
+    workflow: Workflow
 }
 
 type Donor {
@@ -42,6 +47,37 @@ type Sample {
     submitterSampleId: String
     sampleType: String
     matchedNormalSubmitterSampleId: String
+}
+
+type Experiment {
+    platform: String
+    platform_model: String
+    sequencing_date: String
+    sequencing_center: String
+    experimental_strategy: String
+    submitter_sequencing_experiment_id: String
+}
+
+type ReadGroup {
+    file_r1: String
+    file_r2: String
+    insert_size: Int
+    library_name: String
+    is_paired_end: Boolean
+    platform_unit: String
+    read_length_r1: Int
+    read_length_r2: Int
+    sample_barcode: String
+    submitter_read_group_id: String
+}
+
+type Workflow {
+    inputs: JSON
+    run_id: ID
+    genome_build: String
+    workflow_name: String
+    analysis_tools: [String]
+    workflow_version: String
 }
 
 type File {

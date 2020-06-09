@@ -1,4 +1,5 @@
 scalar JSON
+scalar Long
 
 type Analysis {
     analysisId: ID
@@ -20,7 +21,7 @@ type Donor {
 type AnalysisFile {
     objectId: String
     name: String
-    size: Int
+    size: Long
     fileType: String
     md5Sum: String
     fileAccess: String
@@ -49,16 +50,23 @@ type File {
     dataType: String
     fileType: String
     fileAccess: String
-    analysis: Analysis
+    analysis: FileAnalysis
     file: FileMeta
     repositories: [Repository]
     donors: [Donor]
 }
 
+type FileAnalysis {
+    analysisId: ID
+    analysisType: String
+    analysisVersion: Int
+    analysisState: String
+}
+
 type FileMeta {
     name: String
     md5sum: String
-    size: Int
+    size: Long
     dataType: String
     indexFile: IndexFile
 }
@@ -69,7 +77,7 @@ type IndexFile {
     fileType: String
     md5sum: String
     dataType: String
-    size: Int
+    size: Long
 }
 
 type Repository {
@@ -83,22 +91,24 @@ type Repository {
 
 input AnalysisFilter {
     analysisId: String
+    analysisType: String
+    analysisVersion: Int
+    analysisState: String
     studyId: String
     donorId: String
-    sampleId: String
     specimenId: String
+    sampleId: String
     runId: String
 }
 
 input FileFilter {
-    fileId: String
     objectId: String
-    analysisId: String
-    studyId: String
-    donorId: String
     name: String
     fileAccess: String
     dataType: String
+    analysisId: String
+    studyId: String
+    donorId: String
 }
 
 input Page {

@@ -42,7 +42,7 @@ public class Analysis {
   public static final class AnalysisFile {
     private String objectId;
     private String name;
-    private Integer size;
+    private Long size;
     private String fileType;
     private String md5Sum;
     private String fileAccess;

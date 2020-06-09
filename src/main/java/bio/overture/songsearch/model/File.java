@@ -43,10 +43,20 @@ public class File {
   @Data
   @JsonIgnoreProperties(ignoreUnknown = true)
   @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
+  public static final class Analysis {
+    private String analysisId;
+    private String analysisType;
+    private Integer analysisVersion;
+    private String analysisState;
+  }
+
+  @Data
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
   public static final class FileMeta {
     private String name;
     private String md5sum;
-    private Integer size;
+    private Long size;
     private String dataType;
     private IndexFile indexFile;
   }
@@ -60,6 +70,6 @@ public class File {
     private String fileType;
     private String md5sum;
     private String dataType;
-    private Integer size;
+    private Long size;
   }
 }

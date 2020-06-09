@@ -42,10 +42,10 @@ public class AnalysisRepository {
 
   private static Map<String, Function<String, AbstractQueryBuilder<?>>> argumentPathMap() {
     return ImmutableMap.<String, Function<String, AbstractQueryBuilder<?>>>builder()
-        .put(ANALYSIS_ID, value -> new TermQueryBuilder(ANALYSIS_ID, value))
-        .put(ANALYSIS_TYPE, value -> new TermQueryBuilder(ANALYSIS_TYPE, value))
-        .put(ANALYSIS_VERSION, value -> new TermQueryBuilder(ANALYSIS_VERSION, value))
-        .put(ANALYSIS_STATE, value -> new TermQueryBuilder(ANALYSIS_STATE, value))
+        .put(ANALYSIS_ID, value -> new TermQueryBuilder("analysis_id", value))
+        .put(ANALYSIS_TYPE, value -> new TermQueryBuilder("analysis_type", value))
+        .put(ANALYSIS_VERSION, value -> new TermQueryBuilder("analysis_version", value))
+        .put(ANALYSIS_STATE, value -> new TermQueryBuilder("analysis_state", value))
         .build();
   }
 

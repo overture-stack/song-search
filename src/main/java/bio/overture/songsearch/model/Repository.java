@@ -20,7 +20,7 @@ public class Repository {
 
   private String organization;
 
-  private Integer name;
+  private String name;
 
   private String type;
 

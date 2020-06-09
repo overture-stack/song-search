@@ -42,7 +42,7 @@ public class FileRepository {
 
   private static Map<String, Function<String, AbstractQueryBuilder<?>>> argumentPathMap() {
     return ImmutableMap.<String, Function<String, AbstractQueryBuilder<?>>>builder()
-        .put(FILE_OBJECT_ID, value -> new TermQueryBuilder(FILE_OBJECT_ID, value))
+        .put(FILE_OBJECT_ID, value -> new TermQueryBuilder("object_id", value))
         .build();
   }
 

@@ -92,6 +92,12 @@
             <version>${elasticsearch.version}</version>
         </dependency>
 
+        <!-- Health Check -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
         <!-- Testing -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

@@ -48,6 +48,7 @@ public class File {
     private String analysisType;
     private Integer analysisVersion;
     private String analysisState;
+    private Map<String, Object> experiment;
   }
 
   @Data

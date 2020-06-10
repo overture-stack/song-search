@@ -31,6 +31,10 @@ public class Analysis {
 
   private List<AnalysisFile> files;
 
+  private Map<String, Object> experiment;
+
+  private Map<String, Object> workflow;
+
   @SneakyThrows
   public static Analysis parse(@NonNull Map<String, Object> sourceMap) {
     return MAPPER.convertValue(sourceMap, Analysis.class);

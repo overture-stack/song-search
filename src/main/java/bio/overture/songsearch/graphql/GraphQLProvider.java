@@ -1,5 +1,7 @@
 package bio.overture.songsearch.graphql;
 
+import bio.overture.songsearch.model.Analysis;
+import bio.overture.songsearch.model.File;
 import com.apollographql.federation.graphqljava.Federation;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
@@ -24,13 +26,15 @@ public class GraphQLProvider {
 
   private final AnalysisDataFetcher analysisDataFetcher;
   private final FileDataFetcher fileDataFetcher;
+  private final EntityDataFetcher entityDataFetcher;
   private GraphQL graphQL;
   private GraphQLSchema graphQLSchema;
 
   @Autowired
-  public GraphQLProvider(AnalysisDataFetcher analysisDataFetcher, FileDataFetcher fileDataFetcher) {
+  public GraphQLProvider(AnalysisDataFetcher analysisDataFetcher, FileDataFetcher fileDataFetcher, EntityDataFetcher entityDataFetcher) {
     this.analysisDataFetcher = analysisDataFetcher;
     this.fileDataFetcher = fileDataFetcher;
+    this.entityDataFetcher = entityDataFetcher;
   }
 
   @Bean
@@ -47,7 +51,24 @@ public class GraphQLProvider {
   }
 
   private GraphQLSchema buildSchema(String sdl) {
-    return Federation.transform(sdl, buildWiring()).build();
+    return Federation.transform(sdl, buildWiring())
+        .fetchEntities(entityDataFetcher.getDataFetcher())
+        .resolveEntityType(
+            typeResolutionEnvironment -> {
+              final Object src = typeResolutionEnvironment.getObject();
+              if (src instanceof Analysis) {
+                return typeResolutionEnvironment
+                    .getSchema()
+                    .getObjectType(EntityDataFetcher.ANALYSIS_ENTITY);
+              }
+              if (src instanceof File) {
+                return typeResolutionEnvironment
+                    .getSchema()
+                    .getObjectType(EntityDataFetcher.FILE_ENTITY);
+              }
+              return null;
+            })
+        .build();
   }
 
   private RuntimeWiring buildWiring() {

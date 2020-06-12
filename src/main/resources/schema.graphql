@@ -1,8 +1,8 @@
 scalar JSON
 scalar Long
 
-type Analysis {
-    analysisId: ID
+type Analysis @key(fields: "analysisId") {
+    analysisId: ID!
     analysisType: String
     analysisVersion: Int
     analysisState: String
@@ -58,8 +58,8 @@ type Workflow {
 }
 """
 
-type File {
-    objectId: String
+type File @key(fields: "objectId") {
+    objectId: ID!
     studyId: String
     dataType: String
     fileType: String

@@ -1,5 +1,6 @@
 package bio.overture.songsearch.model;
 
+import bio.overture.songsearch.model.enums.AnalysisState;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
@@ -47,7 +48,7 @@ public class File {
     private String analysisId;
     private String analysisType;
     private Integer analysisVersion;
-    private String analysisState;
+    private AnalysisState analysisState;
     private Map<String, Object> experiment;
   }
 

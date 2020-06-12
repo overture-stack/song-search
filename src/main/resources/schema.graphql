@@ -1,11 +1,17 @@
 scalar JSON
 scalar Long
 
+enum AnalysisState {
+    PUBLISHED
+    UNPUBLISHED
+    SUPPRESSED
+}
+
 type Analysis @key(fields: "analysisId") {
     analysisId: ID!
     analysisType: String
     analysisVersion: Int
-    analysisState: String
+    analysisState: AnalysisState
     studyId: String
     donors: [Donor]
     files: [AnalysisFile]
@@ -74,7 +80,7 @@ type FileAnalysis {
     analysisId: ID
     analysisType: String
     analysisVersion: Int
-    analysisState: String
+    analysisState: AnalysisState
     experiment: JSON
 }
 
@@ -108,7 +114,7 @@ input AnalysisFilter {
     analysisId: String
     analysisType: String
     analysisVersion: Int
-    analysisState: String
+    analysisState: AnalysisState
     studyId: String
     donorId: String
     specimenId: String

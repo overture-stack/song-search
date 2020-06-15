@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 
+import java.util.List;
 import java.util.Map;
 
 @Data
@@ -20,7 +21,7 @@ public class Run {
 
     private String runName;
 
-    private Analysis analysis;
+    private List<Analysis> analyses;
 
     @SneakyThrows
     public static Run parse(@NonNull Map<String, Object> sourceMap) {

@@ -43,10 +43,9 @@ public class AnalysisService {
     return runOpt.orElse(null);
   }
 
-  public Analysis getAnalysisByRunName(String runName) {
+  public List<Analysis> getAnalysesByRunName(String runName) {
     val response = analysisRepository.getAnalyses(Map.of(RUN_NAME, runName), null);
-    val runOpt =
-        Arrays.stream(response.getHits().getHits()).map(AnalysisService::hitToAnalysis).findFirst();
-    return runOpt.orElse(null);
+    val hitStream = Arrays.stream(response.getHits().getHits());
+    return hitStream.map(AnalysisService::hitToAnalysis).collect(toUnmodifiableList());
   }
 }

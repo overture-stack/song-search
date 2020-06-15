@@ -50,7 +50,7 @@ public class EntityDataFetcher {
                         if (RUN_ENTITY.equals(values.get("__typename"))) {
                             final Object runName = values.get("runName");
                             if (runName instanceof String) {
-                                return new Run((String) runName, analysisService.getAnalysisByRunName((String) runName));
+                                return new Run((String) runName, analysisService.getAnalysesByRunName((String) runName));
                             }
                         }
                         return null;

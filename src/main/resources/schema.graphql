@@ -17,7 +17,7 @@ type Analysis @key(fields: "analysisId") {
     files: [AnalysisFile]
     repositories: [Repository]
     experiment: JSON
-    workflow: JSON
+    workflow: Workflow
 }
 
 type Donor {
@@ -53,16 +53,15 @@ type Sample {
     matchedNormalSubmitterSampleId: String
 }
 
-"""
 type Workflow {
-    inputs: JSON
-    run_id: ID
-    genome_build: String
-    workflow_name: String
-    analysis_tools: [String]
-    workflow_version: String
+    runName: String # TODO: swap runName to be ID post migration
+    runId: ID!
+    workflowName: String
+    workflowVersion: String
+    inputs: [JSON]
+    genomeBuild: String
+    analysisTools: [String]
 }
-"""
 
 type File @key(fields: "objectId") {
     objectId: ID!
@@ -119,7 +118,7 @@ input AnalysisFilter {
     donorId: String
     specimenId: String
     sampleId: String
-    runId: String
+    runName: String
 }
 
 input FileFilter {
@@ -135,6 +134,11 @@ input FileFilter {
 input Page {
     size: Int!
     from: Int!
+}
+
+type Run @key(fields: "runName") @extends {
+    runName: ID! @external
+    analysis: Analysis!
 }
 
 extend type Query {

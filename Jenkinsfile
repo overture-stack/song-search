@@ -14,9 +14,9 @@ apiVersion: v1
 kind: Pod
 spec:
   containers:
-  - name: node
-    image: node:12.6.0
+  - name: jdk
     tty: true
+    image: adoptopenjdk/openjdk11:jdk-11.0.7_10-alpine-slim
   - name: dind-daemon
     image: docker:18.06-dind
     securityContext:
@@ -52,7 +52,14 @@ spec:
                     commit = sh(returnStdout: true, script: 'git describe --always').trim()
                 }
                 script {
-                    version = sh(returnStdout: true, script: 'cat ./package.json | grep version | cut -d \':\' -f2 | sed -e \'s/"//\' -e \'s/",//\'').trim()
+                    version = readMavenPom().getVersion()
+                }
+            }
+        }
+        stage('Test') {
+            steps {
+                container('jdk') {
+                    sh "./mvnw test"
                 }
             }
         }

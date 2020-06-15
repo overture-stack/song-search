@@ -2,6 +2,7 @@ package bio.overture.songsearch.graphql;
 
 import bio.overture.songsearch.model.Analysis;
 import bio.overture.songsearch.model.File;
+import bio.overture.songsearch.model.Run;
 import com.apollographql.federation.graphqljava.Federation;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
@@ -65,6 +66,11 @@ public class GraphQLProvider {
                 return typeResolutionEnvironment
                     .getSchema()
                     .getObjectType(EntityDataFetcher.FILE_ENTITY);
+              }
+              if (src instanceof Run) {
+                return typeResolutionEnvironment
+                    .getSchema()
+                    .getObjectType(EntityDataFetcher.RUN_ENTITY);
               }
               return null;
             })

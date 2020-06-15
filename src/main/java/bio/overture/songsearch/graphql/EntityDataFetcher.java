@@ -1,5 +1,6 @@
 package bio.overture.songsearch.graphql;
 
+import bio.overture.songsearch.model.Run;
 import bio.overture.songsearch.service.AnalysisService;
 import bio.overture.songsearch.service.FileService;
 import com.apollographql.federation.graphqljava._Entity;
@@ -18,6 +19,7 @@ import static java.util.stream.Collectors.toList;
 public class EntityDataFetcher {
     public static final String ANALYSIS_ENTITY = "Analysis";
     public static final String FILE_ENTITY = "File";
+    public static final String RUN_ENTITY = "Run";
 
     private final AnalysisService analysisService;
     private final FileService fileService;
@@ -43,6 +45,12 @@ public class EntityDataFetcher {
                             final Object fileObjectId = values.get("objectId");
                             if (fileObjectId instanceof String) {
                                 return fileService.getFileByObjectId((String) fileObjectId);
+                            }
+                        }
+                        if (RUN_ENTITY.equals(values.get("__typename"))) {
+                            final Object runName = values.get("runName");
+                            if (runName instanceof String) {
+                                return new Run((String) runName, analysisService.getAnalysisByRunName((String) runName));
                             }
                         }
                         return null;

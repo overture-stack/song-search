@@ -1,0 +1,148 @@
+scalar JSON
+scalar Long
+
+enum AnalysisState {
+    PUBLISHED
+    UNPUBLISHED
+    SUPPRESSED
+}
+
+type Analysis @key(fields: "analysisId") {
+    analysisId: ID!
+    analysisType: String
+    analysisVersion: Int
+    analysisState: AnalysisState
+    studyId: String
+    donors: [Donor]
+    files: [AnalysisFile]
+    repositories: [Repository]
+    experiment: JSON
+    workflow: Workflow
+}
+
+type Donor {
+    donorId: ID
+    submitterDonorId: String
+    gender: String
+    specimens: [Specimen]
+}
+
+type AnalysisFile {
+    objectId: String
+    name: String
+    size: Long
+    fileType: String
+    md5Sum: String
+    fileAccess: String
+    dataType: String
+}
+
+type Specimen {
+    specimenId: ID
+    specimenType: String
+    submitterSpecimenId: String
+    samples: [Sample]
+    tumourNormalDesignation: String
+    specimenTissueSource: String
+}
+
+type Sample {
+    sampleId: ID
+    submitterSampleId: String
+    sampleType: String
+    matchedNormalSubmitterSampleId: String
+}
+
+type Workflow {
+    runName: String # TODO: swap runName to be ID post migration
+    runId: ID!
+    workflowName: String
+    workflowVersion: String
+    inputs: [JSON]
+    genomeBuild: String
+    analysisTools: [String]
+}
+
+type File @key(fields: "objectId") {
+    objectId: ID!
+    studyId: String
+    dataType: String
+    fileType: String
+    fileAccess: String
+    analysis: FileAnalysis
+    file: FileMeta
+    repositories: [Repository]
+    donors: [Donor]
+}
+
+type FileAnalysis {
+    analysisId: ID
+    analysisType: String
+    analysisVersion: Int
+    analysisState: AnalysisState
+    experiment: JSON
+}
+
+type FileMeta {
+    name: String
+    md5sum: String
+    size: Long
+    dataType: String
+    indexFile: IndexFile
+}
+
+type IndexFile {
+    objectId: String
+    name: String
+    fileType: String
+    md5sum: String
+    dataType: String
+    size: Long
+}
+
+type Repository {
+    code: String
+    organization: String
+    name: String
+    type: String
+    country: String
+    url: String
+}
+
+input AnalysisFilter {
+    analysisId: String
+    analysisType: String
+    analysisVersion: Int
+    analysisState: AnalysisState
+    studyId: String
+    donorId: String
+    specimenId: String
+    sampleId: String
+    runName: String
+}
+
+input FileFilter {
+    objectId: String
+    name: String
+    fileAccess: String
+    dataType: String
+    analysisId: String
+    studyId: String
+    donorId: String
+}
+
+input Page {
+    size: Int!
+    from: Int!
+}
+
+type Run @key(fields: "runName") @extends {
+    runName: ID! @external
+    producedAnalyses: [Analysis]
+    inputAnalyses: String
+}
+
+extend type Query {
+    analyses(filter: AnalysisFilter, page: Page): [Analysis]
+    files(filter: FileFilter, page: Page): [File]
+}

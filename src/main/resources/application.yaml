@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: "Song Search"
+    version: ^project.version^
+    description: "Song Search API Documentation"
+
+server:
+  port: 8080
+
+elastic:
+  host: localhost
+  port: 9200
+  useHttps: false
+  useAuthentication: false
+  username: elastic
+  password: testing
+  analysisCentricIndex: analysis_centric
+  fileCentricIndex: file_centric

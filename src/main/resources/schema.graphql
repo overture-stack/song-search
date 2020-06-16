@@ -138,7 +138,8 @@ input Page {
 
 type Run @key(fields: "runName") @extends {
     runName: ID! @external
-    analyses: [Analysis]
+    producedAnalyses: [Analysis]
+    inputAnalyses: String
 }
 
 extend type Query {

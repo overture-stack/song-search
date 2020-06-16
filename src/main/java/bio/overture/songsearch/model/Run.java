@@ -21,7 +21,9 @@ public class Run {
 
     private String runName;
 
-    private List<Analysis> analyses;
+    private List<Analysis> producedAnalyses;
+
+    private String inputAnalyses;
 
     @SneakyThrows
     public static Run parse(@NonNull Map<String, Object> sourceMap) {

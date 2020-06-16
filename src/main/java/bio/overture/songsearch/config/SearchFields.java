@@ -18,4 +18,5 @@ public class SearchFields {
   public static final String DONOR_ID = "donorId";
   public static final String SPECIMEN_ID = "specimenId";
   public static final String SAMPLE_ID = "sampleId";
+  public static final String RUN_NAME = "runName";
 }

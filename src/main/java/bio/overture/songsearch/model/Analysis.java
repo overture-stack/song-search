@@ -34,7 +34,7 @@ public class Analysis {
 
   private Map<String, Object> experiment;
 
-  private Map<String, Object> workflow;
+  private Workflow workflow;
 
   @SneakyThrows
   public static Analysis parse(@NonNull Map<String, Object> sourceMap) {

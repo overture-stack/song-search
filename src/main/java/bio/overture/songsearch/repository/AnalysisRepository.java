@@ -49,6 +49,7 @@ public class AnalysisRepository {
         .put(ANALYSIS_VERSION, value -> new TermQueryBuilder("analysis_version", value))
         .put(ANALYSIS_STATE, value -> new TermQueryBuilder("analysis_state", value))
         .put(STUDY_ID, value -> new TermQueryBuilder("study_id", value))
+        .put(RUN_NAME, value -> new TermQueryBuilder("workflow.run_id", value)) // TODO: change to run_name after migration
         .put(
             DONOR_ID,
             value ->

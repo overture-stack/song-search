@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import static bio.overture.songsearch.config.SearchFields.ANALYSIS_ID;
+import static bio.overture.songsearch.config.SearchFields.RUN_NAME;
 import static java.util.stream.Collectors.toUnmodifiableList;
 
 @Service
@@ -40,5 +41,11 @@ public class AnalysisService {
     val runOpt =
         Arrays.stream(response.getHits().getHits()).map(AnalysisService::hitToAnalysis).findFirst();
     return runOpt.orElse(null);
+  }
+
+  public List<Analysis> getAnalysesByRunName(String runName) {
+    val response = analysisRepository.getAnalyses(Map.of(RUN_NAME, runName), null);
+    val hitStream = Arrays.stream(response.getHits().getHits());
+    return hitStream.map(AnalysisService::hitToAnalysis).collect(toUnmodifiableList());
   }
 }

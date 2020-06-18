@@ -53,7 +53,7 @@ type Sample {
     matchedNormalSubmitterSampleId: String
 }
 
-type Workflow {
+type Workflow @key(fields: "runId") {
     runName: String # TODO: swap runName to be ID post migration
     runId: ID!
     workflowName: String

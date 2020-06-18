@@ -17,8 +17,6 @@ import java.util.Map;
 public class Workflow {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    private String runName;
-
     private String runId;
 
     private String workflowName;

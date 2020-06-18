@@ -19,7 +19,7 @@ import java.util.Map;
 public class Run {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    private String runName;
+    private String runName; // todo: will become runId after reindex
 
     private List<Analysis> producedAnalyses;
 

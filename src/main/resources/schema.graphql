@@ -54,7 +54,6 @@ type Sample {
 }
 
 type Workflow @key(fields: "runId") {
-    runName: String # TODO: swap runName to be ID post migration
     runId: ID!
     workflowName: String
     workflowVersion: String
@@ -118,7 +117,7 @@ input AnalysisFilter {
     donorId: String
     specimenId: String
     sampleId: String
-    runName: String
+    runId: String
 }
 
 input FileFilter {
@@ -137,7 +136,7 @@ input Page {
 }
 
 type Run @key(fields: "runName") @extends {
-    runName: ID! @external
+    runName: ID! @external # todo: runName will become runId after reindex
     producedAnalyses: [Analysis]
     inputAnalyses: String
 }

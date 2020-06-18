@@ -48,11 +48,11 @@ public class EntityDataFetcher {
                     }
                   }
                   if (RUN_ENTITY.equals(values.get("__typename"))) {
-                    final Object runName = values.get("runName");
-                    if (runName instanceof String) {
+                    final Object runId = values.get("runName"); // todo: will become runId after reindex
+                    if (runId instanceof String) {
                       return new Run(
-                          (String) runName,
-                          analysisService.getAnalysesByRunName((String) runName),
+                          (String) runId,
+                          analysisService.getAnalysesByRunId((String) runId),
                           "Not Implemented!");
                     }
                   }

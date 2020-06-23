@@ -48,7 +48,7 @@ public class EntityDataFetcher {
                     }
                   }
                   if (RUN_ENTITY.equals(values.get("__typename"))) {
-                    final Object runId = values.get("runName"); // todo: will become runId after reindex
+                    final Object runId = values.get("runId");
                     if (runId instanceof String) {
                       return new Run(
                           (String) runId,

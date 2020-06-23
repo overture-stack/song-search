@@ -135,8 +135,8 @@ input Page {
     from: Int!
 }
 
-type Run @key(fields: "runName") @extends {
-    runName: ID! @external # todo: runName will become runId after reindex
+type Run @key(fields: "runId") @extends {
+    runId: ID! @external
     producedAnalyses: [Analysis]
     inputAnalyses: String
 }

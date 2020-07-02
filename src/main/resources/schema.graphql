@@ -137,8 +137,9 @@ input Page {
 
 type Run @key(fields: "runId") @extends {
     runId: ID! @external
+    parameters: JSON @external
     producedAnalyses: [Analysis]
-    inputAnalyses: String
+    inputAnalyses: [Analysis] @requires(fields: "parameters")
 }
 
 extend type Query {

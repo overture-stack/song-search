@@ -1,10 +1,10 @@
 package bio.overture.songsearch.graphql;
 
+import bio.overture.songsearch.config.SongSearchProperties;
 import bio.overture.songsearch.model.Run;
 import bio.overture.songsearch.service.AnalysisService;
 import bio.overture.songsearch.service.FileService;
 import com.apollographql.federation.graphqljava._Entity;
-import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableMap;
 import graphql.schema.DataFetcher;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +14,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
+import static bio.overture.songsearch.config.SearchFields.ANALYSIS_ID;
 import static java.util.stream.Collectors.toList;
 
 @Slf4j
@@ -26,11 +28,13 @@ public class EntityDataFetcher {
 
   private final AnalysisService analysisService;
   private final FileService fileService;
+  private final SongSearchProperties songSearchProperties;
 
   @Autowired
-  public EntityDataFetcher(AnalysisService analysisService, FileService fileService) {
+  public EntityDataFetcher(AnalysisService analysisService, FileService fileService, SongSearchProperties songSearchProperties) {
     this.analysisService = analysisService;
     this.fileService = fileService;
+    this.songSearchProperties = songSearchProperties;
   }
 
   public DataFetcher getDataFetcher() {
@@ -52,13 +56,13 @@ public class EntityDataFetcher {
                   }
                   if (RUN_ENTITY.equals(values.get("__typename"))) {
                     final Object runId = values.get("runId");
-                    val filters = createAnalysisFiltersFromRunParameters(values.get("parameters"));
+                    val ids = getRelevantAnalysisIdsFromRunParameters(values.get("parameters"));
 
                     if (runId instanceof String) {
                       return new Run(
                           (String) runId,
                           analysisService.getAnalysesByRunId((String) runId),
-                          analysisService.getAnalyses(filters, null)
+                          analysisService.getAnalysesById(ids)
                           );
                     }
                   }
@@ -68,23 +72,18 @@ public class EntityDataFetcher {
   }
 
   @SuppressWarnings("unchecked")
-  private ImmutableMap<String, Object> createAnalysisFiltersFromRunParameters(Object parametersObj) {
-      // conver parameters to map
+  private List<String> getRelevantAnalysisIdsFromRunParameters(Object parametersObj) {
+      // convert parameters to map
       val parametersBuilder = ImmutableMap.<String, Object>builder();
       if (parametersObj != null) {
           parametersBuilder.putAll((Map<String, Object>) parametersObj);
       }
       val parameters = parametersBuilder.build();
 
-      List<String> lookFor = List.of("analysis_id", "normal_aln_analysis_id", "tumour_aln_analysis_id"); // TODO put in more common place?
+      List<String> lookFor = songSearchProperties.getRunParameterKeys().get(ANALYSIS_ID);
 
-      val filtersBuilder = ImmutableMap.<String, Object>builder();
-      lookFor.forEach(k -> {
-          if (parameters.get(k) != null) {
-              val formattedKey = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, k.toLowerCase());  // TODO check if this is needed
-              filtersBuilder.put(formattedKey, parameters.get(k));
-          }
-      });
-      return filtersBuilder.build();
+      val analysisIds = lookFor.stream().map(parameters::get).filter(Objects::nonNull).map(Objects::toString).collect(toList());
+      analysisIds.add( "6406af31-7567-4611-86af-317567c611c6"); // TODO remove
+      return analysisIds;
   }
 }

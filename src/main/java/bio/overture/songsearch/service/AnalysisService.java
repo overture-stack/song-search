@@ -10,9 +10,11 @@ import org.springframework.stereotype.Service;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static bio.overture.songsearch.config.SearchFields.ANALYSIS_ID;
 import static bio.overture.songsearch.config.SearchFields.RUN_ID;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toUnmodifiableList;
 
 @Service
@@ -48,4 +50,14 @@ public class AnalysisService {
     val hitStream = Arrays.stream(response.getHits().getHits());
     return hitStream.map(AnalysisService::hitToAnalysis).collect(toUnmodifiableList());
   }
+
+ public List<Analysis> getAnalysesById(List<String> analysisIds) {
+    val multipleFilters = analysisIds.stream().map(id -> Map.of(ANALYSIS_ID, (Object) id)).collect(toList());
+    val responses = analysisRepository.getAnalyses(multipleFilters, null);
+    return responses.stream()
+                            .map(r -> Arrays.stream(r.getHits().getHits()).map(AnalysisService::hitToAnalysis).findFirst())
+                            .filter(Optional::isPresent)
+                            .map(Optional::get)
+                            .collect(toUnmodifiableList());
+ }
 }

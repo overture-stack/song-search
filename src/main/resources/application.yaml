@@ -16,3 +16,10 @@ elastic:
   password: testing
   analysisCentricIndex: analysis_centric
   fileCentricIndex: file_centric
+
+song-search:
+  runParameterKeys:
+    analysisId:
+      - analysis_id
+      - normal_aln_analysis_id
+      - tumour_aln_analysis_id

@@ -7,6 +7,8 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.lucene.search.join.ScoreMode;
+import org.elasticsearch.action.search.MultiSearchRequest;
+import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
@@ -18,8 +20,9 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static bio.overture.songsearch.config.SearchFields.*;
 import static bio.overture.songsearch.utils.ElasticsearchQueryUtils.queryFromArgs;
@@ -85,10 +88,48 @@ public class AnalysisRepository {
     return execute(searchSourceBuilder);
   }
 
+  public List<SearchResponse> getAnalyses(List<Map<String, Object>> multiFilters, Map<String, Integer> page) {
+    if (multiFilters.isEmpty()) {
+      return List.of(getAnalyses(Map.of(), page));
+    }
+
+    List<SearchSourceBuilder> builders = new ArrayList<>();
+
+    multiFilters.stream()
+            .filter(f -> f != null && f.size() != 0)
+            .forEach(f -> builders.add(createSearchSourceBuilder(f, page)));
+
+    return Arrays.stream(execute(builders).getResponses()).map(MultiSearchResponse.Item::getResponse).collect(Collectors.toList());
+  }
+
+  private SearchSourceBuilder createSearchSourceBuilder(Map<String, Object> filter, Map<String, Integer> page) {
+    final AbstractQueryBuilder<?> query =
+            (filter == null || filter.size() == 0)
+                    ? matchAllQuery()
+                    : queryFromArgs(QUERY_RESOLVER, filter);
+
+    val searchSourceBuilder = new SearchSourceBuilder();
+    searchSourceBuilder.query(query);
+
+    if (page != null && page.size() != 0) {
+      searchSourceBuilder.size(page.get("size"));
+      searchSourceBuilder.from(page.get("from"));
+    }
+
+    return searchSourceBuilder;
+  }
+
   @SneakyThrows
   private SearchResponse execute(@NonNull SearchSourceBuilder builder) {
     val searchRequest = new SearchRequest(analysisCentricIndex);
     searchRequest.source(builder);
     return client.search(searchRequest, RequestOptions.DEFAULT);
+  }
+
+  @SneakyThrows
+  private MultiSearchResponse execute(@NonNull List<SearchSourceBuilder> builders) {
+    MultiSearchRequest mSearchRequest = new MultiSearchRequest();
+    builders.forEach(b -> mSearchRequest.add(new SearchRequest().source(b)));
+    return client.msearch(mSearchRequest, RequestOptions.DEFAULT);
   }
 }

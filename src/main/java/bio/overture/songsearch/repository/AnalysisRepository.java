@@ -77,37 +77,25 @@ public class AnalysisRepository {
             ? matchAllQuery()
             : queryFromArgs(QUERY_RESOLVER, filter);
 
-    val searchSourceBuilder = new SearchSourceBuilder();
-    searchSourceBuilder.query(query);
-
-    if (page != null && page.size() != 0) {
-      searchSourceBuilder.size(page.get("size"));
-      searchSourceBuilder.from(page.get("from"));
-    }
+    val searchSourceBuilder = createSearchSourceBuilder(query, page);
 
     return execute(searchSourceBuilder);
   }
 
-  public List<SearchResponse> getAnalyses(List<Map<String, Object>> multiFilters, Map<String, Integer> page) {
-    if (multiFilters.isEmpty()) {
-      return List.of(getAnalyses(Map.of(), page));
+  public MultiSearchResponse getAnalyses(List<Map<String, Object>> multipleFilters, Map<String, Integer> page) {
+    List<SearchSourceBuilder> searchSourceBuilders = multipleFilters.stream()
+            .filter(f -> f != null && f.size() != 0)
+            .map(f -> createSearchSourceBuilder(queryFromArgs(QUERY_RESOLVER, f), page))
+            .collect(Collectors.toList());
+
+    if (searchSourceBuilders.isEmpty()) {
+      searchSourceBuilders.add(createSearchSourceBuilder(matchAllQuery(), page));
     }
 
-    List<SearchSourceBuilder> builders = new ArrayList<>();
-
-    multiFilters.stream()
-            .filter(f -> f != null && f.size() != 0)
-            .forEach(f -> builders.add(createSearchSourceBuilder(f, page)));
-
-    return Arrays.stream(execute(builders).getResponses()).map(MultiSearchResponse.Item::getResponse).collect(Collectors.toList());
+    return execute(searchSourceBuilders);
   }
 
-  private SearchSourceBuilder createSearchSourceBuilder(Map<String, Object> filter, Map<String, Integer> page) {
-    final AbstractQueryBuilder<?> query =
-            (filter == null || filter.size() == 0)
-                    ? matchAllQuery()
-                    : queryFromArgs(QUERY_RESOLVER, filter);
-
+  private SearchSourceBuilder createSearchSourceBuilder(AbstractQueryBuilder<?> query, Map<String, Integer> page) {
     val searchSourceBuilder = new SearchSourceBuilder();
     searchSourceBuilder.query(query);
 

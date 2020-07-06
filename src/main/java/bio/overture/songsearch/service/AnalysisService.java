@@ -3,6 +3,7 @@ package bio.overture.songsearch.service;
 import bio.overture.songsearch.model.Analysis;
 import bio.overture.songsearch.repository.AnalysisRepository;
 import lombok.val;
+import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.search.SearchHit;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -53,9 +54,12 @@ public class AnalysisService {
 
  public List<Analysis> getAnalysesById(List<String> analysisIds) {
     val multipleFilters = analysisIds.stream().map(id -> Map.of(ANALYSIS_ID, (Object) id)).collect(toList());
-    val responses = analysisRepository.getAnalyses(multipleFilters, null);
-    return responses.stream()
-                            .map(r -> Arrays.stream(r.getHits().getHits()).map(AnalysisService::hitToAnalysis).findFirst())
+    val multiSearchResponse = analysisRepository.getAnalyses(multipleFilters, null);
+    return Arrays.stream(multiSearchResponse.getResponses())
+                            .map(MultiSearchResponse.Item::getResponse)
+                            .map(res -> Arrays.stream(res.getHits().getHits())
+                                              .map(AnalysisService::hitToAnalysis)
+                                              .findFirst())
                             .filter(Optional::isPresent)
                             .map(Optional::get)
                             .collect(toUnmodifiableList());

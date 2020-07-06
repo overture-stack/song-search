@@ -18,7 +18,7 @@ elastic:
   fileCentricIndex: file_centric
 
 song-search:
-  runParameterKeys:
+  workflowRunParameterKeys:
     analysisId:
       - analysis_id
       - normal_aln_analysis_id

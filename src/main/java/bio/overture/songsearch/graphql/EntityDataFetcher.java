@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import static bio.overture.songsearch.config.SearchFields.ANALYSIS_ID;
 import static java.util.stream.Collectors.toList;
 
 @Slf4j
@@ -73,17 +72,18 @@ public class EntityDataFetcher {
 
   @SuppressWarnings("unchecked")
   private List<String> getRelevantAnalysisIdsFromRunParameters(Object parametersObj) {
-      // convert parameters to map
       val parametersBuilder = ImmutableMap.<String, Object>builder();
       if (parametersObj != null) {
           parametersBuilder.putAll((Map<String, Object>) parametersObj);
       }
       val parameters = parametersBuilder.build();
 
-      List<String> lookFor = songSearchProperties.getRunParameterKeys().get(ANALYSIS_ID);
+      List<String> analysisIdKeysToLookFor = songSearchProperties.getWorkflowRunParameterKeys().getAnalysisId();
 
-      val analysisIds = lookFor.stream().map(parameters::get).filter(Objects::nonNull).map(Objects::toString).collect(toList());
-      analysisIds.add( "6406af31-7567-4611-86af-317567c611c6"); // TODO remove
-      return analysisIds;
+      return analysisIdKeysToLookFor.stream()
+                                .map(parameters::get)
+                                .filter(Objects::nonNull)
+                                .map(Objects::toString)
+                                .collect(toList());
   }
 }

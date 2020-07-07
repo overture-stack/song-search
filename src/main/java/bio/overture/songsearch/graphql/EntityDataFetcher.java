@@ -5,6 +5,7 @@ import bio.overture.songsearch.model.Run;
 import bio.overture.songsearch.service.AnalysisService;
 import bio.overture.songsearch.service.FileService;
 import com.apollographql.federation.graphqljava._Entity;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import graphql.schema.DataFetcher;
 import lombok.extern.slf4j.Slf4j;
@@ -70,15 +71,19 @@ public class EntityDataFetcher {
             .collect(toList());
   }
 
-  @SuppressWarnings("unchecked")
-  private List<String> getRelevantAnalysisIdsFromRunParameters(Object parametersObj) {
+    private List<String> getRelevantAnalysisIdsFromRunParameters(Object parametersObj) {
       val parametersBuilder = ImmutableMap.<String, Object>builder();
-      if (parametersObj != null) {
-          parametersBuilder.putAll((Map<String, Object>) parametersObj);
+      if (parametersObj instanceof Map) {
+          try {
+              val parametersMap = (Map<String, Object>) parametersObj;
+              parametersBuilder.putAll(parametersMap);
+          } catch (ClassCastException e) {
+              log.error("Failed to cast parametersObj to Map<String, Object>");
+          }
       }
       val parameters = parametersBuilder.build();
 
-      List<String> analysisIdKeysToLookFor = songSearchProperties.getWorkflowRunParameterKeys().getAnalysisId();
+      ImmutableList<String> analysisIdKeysToLookFor = songSearchProperties.getWorkflowRunParameterKeys().getAnalysisId();
 
       return analysisIdKeysToLookFor.stream()
                                 .map(parameters::get)

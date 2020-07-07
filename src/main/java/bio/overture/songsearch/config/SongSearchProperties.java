@@ -1,9 +1,10 @@
 package bio.overture.songsearch.config;
 
-import lombok.AllArgsConstructor;
+import com.google.common.collect.ImmutableList;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.ConstructorBinding;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
@@ -14,10 +15,13 @@ import java.util.List;
 public class SongSearchProperties {
     WorkflowRunParameterKeys workflowRunParameterKeys;
 
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
+    @Value
+    @ConstructorBinding
     public static class WorkflowRunParameterKeys {
-        List<String> analysisId;
+       ImmutableList<String> analysisId;
+
+        public WorkflowRunParameterKeys(List<String> analysisId) {
+            this.analysisId = ImmutableList.copyOf(analysisId);
+        }
     }
 }

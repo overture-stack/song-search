@@ -79,10 +79,6 @@ spec:
                     sh "docker push ${dockerHubRepo}:${commit}"
                     sh "docker push ${dockerHubRepo}:edge"
                 }
-                sleep(time:30,unit:"SECONDS")
-                build(job: "/provision/rdpc-gateway-restart", parameters: [
-                    [$class: 'StringParameterValue', name: 'AP_RDPC_ENV', value: 'dev' ],
-                ])
             }
         }
         stage('deploy to rdpc-collab-dev') {
@@ -96,6 +92,10 @@ spec:
                      [$class: 'StringParameterValue', name: 'AP_RELEASE_NAME', value: 'song-search'],
                      [$class: 'StringParameterValue', name: 'AP_HELM_CHART_VERSION', value: "${chartVersion}"],
                      [$class: 'StringParameterValue', name: 'AP_ARGS_LINE', value: "--set-string image.tag=${commit}" ]
+                ])
+                sleep(time:30,unit:"SECONDS")
+                build(job: "/provision/rdpc-gateway-restart", parameters: [
+                    [$class: 'StringParameterValue', name: 'AP_RDPC_ENV', value: 'dev' ],
                 ])
             }
         }

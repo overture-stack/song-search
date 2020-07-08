@@ -23,7 +23,7 @@ public class Run {
 
     private List<Analysis> producedAnalyses;
 
-    private String inputAnalyses;
+    private List<Analysis> inputAnalyses;
 
     @SneakyThrows
     public static Run parse(@NonNull Map<String, Object> sourceMap) {

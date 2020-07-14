@@ -1,4 +1,4 @@
-package bio.overture.songsearch.graphql;
+package bio.overture.songsearch.graphql.security;
 
 import graphql.*;
 import graphql.execution.ExecutionContext;
@@ -18,12 +18,12 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class QueryStrategyVerifyAuthDecorator extends ExecutionStrategy {
+public class VerifyAuthQueryStrategyDecorator extends ExecutionStrategy {
 
     private final List<String> readOnly;
     private final ExecutionStrategy decoratedStrategy;
 
-    public QueryStrategyVerifyAuthDecorator(ExecutionStrategy decoratedStrategy, List<String> readOnly) {
+    public VerifyAuthQueryStrategyDecorator(ExecutionStrategy decoratedStrategy, List<String> readOnly) {
         this.decoratedStrategy = decoratedStrategy;
         this.readOnly = readOnly;
     }

@@ -1,6 +1,7 @@
 package bio.overture.songsearch.graphql;
 
 import bio.overture.songsearch.config.websecurity.AuthProperties;
+import bio.overture.songsearch.graphql.security.VerifyAuthQueryStrategyDecorator;
 import bio.overture.songsearch.model.Analysis;
 import bio.overture.songsearch.model.File;
 import bio.overture.songsearch.model.Run;
@@ -59,10 +60,15 @@ public class GraphQLProvider {
     URL url = Resources.getResource("schema.graphql");
     String sdl = Resources.toString(url, Charsets.UTF_8);
     graphQLSchema = buildSchema(sdl);
-    val queryScopesToCheck = getQueryScopesToCheck();
-    this.graphQL = GraphQL.newGraphQL(graphQLSchema)
-                           .queryExecutionStrategy(new QueryStrategyVerifyAuthDecorator(new AsyncExecutionStrategy(), queryScopesToCheck))
-                           .build();
+    this.graphQL = buildGraphql(graphQLSchema);
+  }
+
+  private GraphQL buildGraphql(GraphQLSchema graphQLSchema) {
+      val graphQLBuilder = GraphQL.newGraphQL(graphQLSchema);
+      if (authProperties.isEnabled()) {
+          graphQLBuilder.queryExecutionStrategy(new VerifyAuthQueryStrategyDecorator(new AsyncExecutionStrategy(), queryScopesToCheck()));
+      }
+      return graphQLBuilder.build();
   }
 
   private GraphQLSchema buildSchema(String sdl) {
@@ -103,8 +109,12 @@ public class GraphQLProvider {
         .build();
   }
 
-  private ImmutableList<String> getQueryScopesToCheck() {
-      return ImmutableList.copyOf(Iterables.concat(authProperties.getGraphqlScopes().getQueryOnly(), authProperties.getGraphqlScopes().getQueryAndMutation()));
+  private ImmutableList<String> queryScopesToCheck() {
+      return ImmutableList.copyOf(
+              Iterables.concat(
+                      authProperties.getGraphqlScopes().getQueryOnly(),
+                      authProperties.getGraphqlScopes().getQueryAndMutation()
+              ));
 
   }
 }

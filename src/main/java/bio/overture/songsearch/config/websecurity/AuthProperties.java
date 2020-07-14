@@ -15,6 +15,8 @@ import java.util.List;
 @ConfigurationProperties(prefix = "auth")
 public class AuthProperties {
 
+    boolean enabled;
+
     String jwtPublicKeyUrl;
 
     String jwtPublicKeyStr;

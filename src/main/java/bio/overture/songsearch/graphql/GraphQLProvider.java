@@ -1,16 +1,21 @@
 package bio.overture.songsearch.graphql;
 
+import bio.overture.songsearch.config.websecurity.AuthProperties;
 import bio.overture.songsearch.model.Analysis;
 import bio.overture.songsearch.model.File;
 import bio.overture.songsearch.model.Run;
 import com.apollographql.federation.graphqljava.Federation;
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.io.Resources;
 import graphql.GraphQL;
+import graphql.execution.AsyncExecutionStrategy;
 import graphql.scalars.ExtendedScalars;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.idl.RuntimeWiring;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
@@ -28,14 +33,20 @@ public class GraphQLProvider {
   private final AnalysisDataFetcher analysisDataFetcher;
   private final FileDataFetcher fileDataFetcher;
   private final EntityDataFetcher entityDataFetcher;
+  private final AuthProperties authProperties;
   private GraphQL graphQL;
   private GraphQLSchema graphQLSchema;
 
   @Autowired
-  public GraphQLProvider(AnalysisDataFetcher analysisDataFetcher, FileDataFetcher fileDataFetcher, EntityDataFetcher entityDataFetcher) {
+  public GraphQLProvider(
+          AnalysisDataFetcher analysisDataFetcher,
+          FileDataFetcher fileDataFetcher,
+          EntityDataFetcher entityDataFetcher,
+          AuthProperties authProperties) {
     this.analysisDataFetcher = analysisDataFetcher;
     this.fileDataFetcher = fileDataFetcher;
     this.entityDataFetcher = entityDataFetcher;
+    this.authProperties = authProperties;
   }
 
   @Bean
@@ -48,7 +59,10 @@ public class GraphQLProvider {
     URL url = Resources.getResource("schema.graphql");
     String sdl = Resources.toString(url, Charsets.UTF_8);
     graphQLSchema = buildSchema(sdl);
-    this.graphQL = GraphQL.newGraphQL(graphQLSchema).build();
+    val queryScopesToCheck = getQueryScopesToCheck();
+    this.graphQL = GraphQL.newGraphQL(graphQLSchema)
+                           .queryExecutionStrategy(new QueryStrategyVerifyAuthDecorator(new AsyncExecutionStrategy(), queryScopesToCheck))
+                           .build();
   }
 
   private GraphQLSchema buildSchema(String sdl) {
@@ -87,5 +101,10 @@ public class GraphQLProvider {
             newTypeWiring("Query")
                 .dataFetcher("files", fileDataFetcher.getFilesDataFetcher()))
         .build();
+  }
+
+  private ImmutableList<String> getQueryScopesToCheck() {
+      return ImmutableList.copyOf(Iterables.concat(authProperties.getGraphqlScopes().getQueryOnly(), authProperties.getGraphqlScopes().getQueryAndMutation()));
+
   }
 }

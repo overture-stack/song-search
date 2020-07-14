@@ -92,7 +92,7 @@ public class AuthEnabledConfiguration {
         String publicKeyStr;
 
         val publicKeyUrl = authProperties.getJwtPublicKeyUrl();
-        if (!publicKeyUrl.isBlank()) {
+        if (publicKeyUrl != null && !publicKeyUrl.isEmpty()) {
             publicKeyStr = fetchJWTPublicKey(publicKeyUrl);
         } else {
             publicKeyStr = authProperties.getJwtPublicKeyStr();

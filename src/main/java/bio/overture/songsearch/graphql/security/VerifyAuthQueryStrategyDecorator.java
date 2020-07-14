@@ -58,7 +58,6 @@ public class VerifyAuthQueryStrategyDecorator extends ExecutionStrategy {
         if (foundScopes.size() <= 0) {
             val deniedError = GraphqlErrorBuilder.newError()
                                       .message("Permission Denied")
-                                      .extensions(Map.of("status", "403"))
                                       .build();
             ExecutionResult result = new ExecutionResultImpl(deniedError);
             return CompletableFuture.completedFuture(result);

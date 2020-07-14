@@ -9,7 +9,7 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 
 @EnableWebFluxSecurity
 @Profile("!secure")
-public class AuthDisabledConfiguration {
+public class AuthDisabledConfig {
     @Bean
     public SecurityWebFilterChain securityFilterChain(
             ServerHttpSecurity http) {

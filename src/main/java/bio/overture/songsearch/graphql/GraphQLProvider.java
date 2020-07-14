@@ -1,7 +1,7 @@
 package bio.overture.songsearch.graphql;
 
 import bio.overture.songsearch.config.websecurity.AuthProperties;
-import bio.overture.songsearch.graphql.security.VerifyAuthQueryStrategyDecorator;
+import bio.overture.songsearch.graphql.security.VerifyAuthQueryExecutionStrategyDecorator;
 import bio.overture.songsearch.model.Analysis;
 import bio.overture.songsearch.model.File;
 import bio.overture.songsearch.model.Run;
@@ -66,7 +66,10 @@ public class GraphQLProvider {
   private GraphQL buildGraphql(GraphQLSchema graphQLSchema) {
       val graphQLBuilder = GraphQL.newGraphQL(graphQLSchema);
       if (authProperties.isEnabled()) {
-          graphQLBuilder.queryExecutionStrategy(new VerifyAuthQueryStrategyDecorator(new AsyncExecutionStrategy(), queryScopesToCheck()));
+          // For more info on `Execution Strategies` see: https://www.graphql-java.com/documentation/v15/execution/
+          graphQLBuilder.queryExecutionStrategy(
+                  new VerifyAuthQueryExecutionStrategyDecorator(new AsyncExecutionStrategy(), queryScopesToCheck())
+          );
       }
       return graphQLBuilder.build();
   }

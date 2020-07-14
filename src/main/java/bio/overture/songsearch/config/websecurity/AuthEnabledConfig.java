@@ -35,14 +35,14 @@ import static java.util.stream.Collectors.toList;
 @EnableWebFluxSecurity
 @Slf4j
 @Profile("secure")
-public class AuthEnabledConfiguration {
+public class AuthEnabledConfig {
 
     AuthProperties authProperties;
 
     ResourceLoader resourceLoader;
 
     @Autowired
-    public AuthEnabledConfiguration(AuthProperties authProperties, ResourceLoader resourceLoader) {
+    public AuthEnabledConfig(AuthProperties authProperties, ResourceLoader resourceLoader) {
         this.authProperties = authProperties;
         this.resourceLoader = resourceLoader;
     }
@@ -51,9 +51,9 @@ public class AuthEnabledConfiguration {
     public SecurityWebFilterChain securityFilterChain(
             ServerHttpSecurity http) {
         http
-                .csrf().disable() // graphql endpoint resolves with 403 if csrf is enabled
+                .csrf().disable()
                 .authorizeExchange()
-                .pathMatchers("/graphql/**").permitAll() // `hasAuthority` is checked at graphql layer
+                .pathMatchers("/graphql/**").permitAll() // authentication done via spring, authorization done in graphql
                 .pathMatchers("/actuator/**").permitAll()
             .and()
                 .oauth2ResourceServer().jwt()

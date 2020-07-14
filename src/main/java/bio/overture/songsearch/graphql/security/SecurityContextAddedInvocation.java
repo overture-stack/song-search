@@ -44,14 +44,11 @@ public class SecurityContextAddedInvocation implements GraphQLInvocation {
 
     @SneakyThrows
     public Mono<ExecutionInput> addReactiveSecurityContextToExecutionInput(ExecutionInput.Builder executionInputBuilder) {
-        log.info("Adding Reactive Security Context To Execution Input");
+        log.debug("Adding Reactive Security Context To Execution Input");
         Mono<SecurityContext> securityContextMono = ReactiveSecurityContextHolder.getContext();
 
         return securityContextMono
-                       .map(securityContext -> {
-                                    log.info(securityContext.toString());
-                                    return executionInputBuilder.context(securityContext).build();
-                       })
+                       .map(securityContext -> executionInputBuilder.context(securityContext).build())
                        .switchIfEmpty(Mono.just(executionInputBuilder.build()));
     }
 }

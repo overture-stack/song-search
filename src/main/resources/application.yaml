@@ -24,13 +24,9 @@ song-search:
       - normal_aln_analysis_id
       - tumour_aln_analysis_id
 
-auth:
-  enabled: false
-
 ---
 spring.profiles: secure
 auth:
-  enabled: true
   jwtPublicKeyUrl: "http://localhost:8081/oauth/token/public_key"
   jwtPublicKeyStr: "-----BEGIN PUBLIC KEY-----\nSET ME IF YOU DONT HAVE A URL, BUT URL TAKES PRIORITY\n-----END PUBLIC KEY-----"
   graphqlScopes:

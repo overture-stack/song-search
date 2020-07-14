@@ -16,9 +16,9 @@ import graphql.scalars.ExtendedScalars;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.idl.RuntimeWiring;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -51,8 +51,22 @@ public class GraphQLProvider {
   }
 
   @Bean
+  @Profile("!secure")
   public GraphQL graphQL() {
     return graphQL;
+  }
+
+  @Bean
+  @Profile("secure")
+  public GraphQL secureGraphQL() {
+      return graphQL.transform(this::toSecureGraphql);
+  }
+
+  private void toSecureGraphql(GraphQL.Builder graphQLBuilder) {
+      // For more info on `Execution Strategies` see: https://www.graphql-java.com/documentation/v15/execution/
+      graphQLBuilder.queryExecutionStrategy(
+              new VerifyAuthQueryExecutionStrategyDecorator(new AsyncExecutionStrategy(), queryScopesToCheck())
+      );
   }
 
   @PostConstruct
@@ -60,18 +74,7 @@ public class GraphQLProvider {
     URL url = Resources.getResource("schema.graphql");
     String sdl = Resources.toString(url, Charsets.UTF_8);
     graphQLSchema = buildSchema(sdl);
-    this.graphQL = buildGraphql(graphQLSchema);
-  }
-
-  private GraphQL buildGraphql(GraphQLSchema graphQLSchema) {
-      val graphQLBuilder = GraphQL.newGraphQL(graphQLSchema);
-      if (authProperties.isEnabled()) {
-          // For more info on `Execution Strategies` see: https://www.graphql-java.com/documentation/v15/execution/
-          graphQLBuilder.queryExecutionStrategy(
-                  new VerifyAuthQueryExecutionStrategyDecorator(new AsyncExecutionStrategy(), queryScopesToCheck())
-          );
-      }
-      return graphQLBuilder.build();
+    this.graphQL = GraphQL.newGraphQL(graphQLSchema).build();
   }
 
   private GraphQLSchema buildSchema(String sdl) {

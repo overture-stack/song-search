@@ -37,9 +37,9 @@ import static java.util.stream.Collectors.toList;
 @Profile("secure")
 public class AuthEnabledConfig {
 
-    AuthProperties authProperties;
+    private final AuthProperties authProperties;
 
-    ResourceLoader resourceLoader;
+    private final ResourceLoader resourceLoader;
 
     @Autowired
     public AuthEnabledConfig(AuthProperties authProperties, ResourceLoader resourceLoader) {

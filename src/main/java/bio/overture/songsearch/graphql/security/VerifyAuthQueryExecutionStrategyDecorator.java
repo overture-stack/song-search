@@ -61,11 +61,7 @@ public class VerifyAuthQueryExecutionStrategyDecorator extends ExecutionStrategy
         log.debug("Context auth scopes found in decorator: " + foundAcceptedAuthScopes.toString());
 
         if (foundAcceptedAuthScopes.size() <= 0) {
-            val deniedError = GraphqlErrorBuilder.newError()
-                                      .message("Permission Denied")
-                                      .build();
-            ExecutionResult result = new ExecutionResultImpl(deniedError);
-            return CompletableFuture.completedFuture(result);
+            return permissionDeniedResult();
         }
 
         return decoratedStrategy.execute(executionContext, executionStrategyParameters);
@@ -89,6 +85,14 @@ public class VerifyAuthQueryExecutionStrategyDecorator extends ExecutionStrategy
                     .map(GrantedAuthority::getAuthority)
                     .filter(acceptedQueryAuthScopes::contains)
                     .collect(Collectors.toUnmodifiableList());
+    }
+
+    private CompletableFuture<ExecutionResult> permissionDeniedResult() {
+        val deniedError = GraphqlErrorBuilder.newError()
+                                  .message("Permission Denied")
+                                  .build();
+        ExecutionResult result = new ExecutionResultImpl(deniedError);
+        return CompletableFuture.completedFuture(result);
     }
 
     // As per the apollo federation spec (https://www.apollographql.com/docs/apollo-server/federation/federation-spec/#fetch-service-capabilities),

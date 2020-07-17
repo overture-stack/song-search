@@ -74,6 +74,9 @@ public class AuthEnabledConfig {
                 .pathMatchers("/graphql/**").permitAll() // authentication done via spring, authorization done in graphql
                 .pathMatchers("/actuator/**").permitAll()
             .and()
+                .authorizeExchange()
+                .anyExchange().authenticated()
+            .and()
                 .oauth2ResourceServer().jwt()
                     .jwtDecoder(jwtDecoder())
                     .jwtAuthenticationConverter(grantedAuthoritiesExtractor());

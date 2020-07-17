@@ -18,19 +18,25 @@
 
 package bio.overture.songsearch.graphql;
 
+import bio.overture.songsearch.config.websecurity.AuthProperties;
+import bio.overture.songsearch.graphql.security.VerifyAuthQueryExecutionStrategyDecorator;
 import bio.overture.songsearch.model.Analysis;
 import bio.overture.songsearch.model.File;
 import bio.overture.songsearch.model.Run;
 import com.apollographql.federation.graphqljava.Federation;
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.io.Resources;
 import graphql.GraphQL;
+import graphql.execution.AsyncExecutionStrategy;
 import graphql.scalars.ExtendedScalars;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.idl.RuntimeWiring;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -46,19 +52,39 @@ public class GraphQLProvider {
   private final AnalysisDataFetcher analysisDataFetcher;
   private final FileDataFetcher fileDataFetcher;
   private final EntityDataFetcher entityDataFetcher;
+  private final AuthProperties authProperties;
   private GraphQL graphQL;
   private GraphQLSchema graphQLSchema;
 
   @Autowired
-  public GraphQLProvider(AnalysisDataFetcher analysisDataFetcher, FileDataFetcher fileDataFetcher, EntityDataFetcher entityDataFetcher) {
+  public GraphQLProvider(
+          AnalysisDataFetcher analysisDataFetcher,
+          FileDataFetcher fileDataFetcher,
+          EntityDataFetcher entityDataFetcher,
+          AuthProperties authProperties) {
     this.analysisDataFetcher = analysisDataFetcher;
     this.fileDataFetcher = fileDataFetcher;
     this.entityDataFetcher = entityDataFetcher;
+    this.authProperties = authProperties;
   }
 
   @Bean
+  @Profile("!secure")
   public GraphQL graphQL() {
     return graphQL;
+  }
+
+  @Bean
+  @Profile("secure")
+  public GraphQL secureGraphQL() {
+      return graphQL.transform(this::toSecureGraphql);
+  }
+
+  private void toSecureGraphql(GraphQL.Builder graphQLBuilder) {
+      // For more info on `Execution Strategies` see: https://www.graphql-java.com/documentation/v15/execution/
+      graphQLBuilder.queryExecutionStrategy(
+              new VerifyAuthQueryExecutionStrategyDecorator(new AsyncExecutionStrategy(), queryScopesToCheck())
+      );
   }
 
   @PostConstruct
@@ -105,5 +131,14 @@ public class GraphQLProvider {
             newTypeWiring("Query")
                 .dataFetcher("files", fileDataFetcher.getFilesDataFetcher()))
         .build();
+  }
+
+  private ImmutableList<String> queryScopesToCheck() {
+      return ImmutableList.copyOf(
+              Iterables.concat(
+                      authProperties.getGraphqlScopes().getQueryOnly(),
+                      authProperties.getGraphqlScopes().getQueryAndMutation()
+              ));
+
   }
 }

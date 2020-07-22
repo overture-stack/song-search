@@ -1,10 +1,10 @@
 /*
  * Copyright (c) 2020 The Ontario Institute for Cancer Research. All rights reserved
- *  
+ *
  * This program and the accompanying materials are made available under the terms of the GNU Affero General Public License v3.0.
  * You should have received a copy of the GNU Affero General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
- *  
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
@@ -16,29 +16,38 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package bio.overture.songsearch.utils;
+package bio.overture.songsearch.config.websecurity;
 
-import lombok.val;
-import org.elasticsearch.index.query.AbstractQueryBuilder;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
+import com.google.common.collect.ImmutableList;
+import lombok.Data;
+import lombok.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.ConstructorBinding;
+import org.springframework.context.annotation.Configuration;
 
-import java.util.Map;
-import java.util.function.Function;
+import java.util.List;
 
-public class ElasticsearchQueryUtils {
-  /**
-   * For each argument, find its query producer function and apply the argument value ANDing it in a
-   * bool query
-   *
-   * @param args Argument Map from GraphQL
-   * @return Elasticsearch Bool Query containing ANDed (MUSTed) term queries
-   */
-  public static BoolQueryBuilder queryFromArgs(
-      Map<String, Function<String, AbstractQueryBuilder<?>>> QUERY_RESOLVER,
-      Map<String, Object> args) {
-    val bool = QueryBuilders.boolQuery();
-    args.forEach((key, value) -> bool.must(QUERY_RESOLVER.get(key).apply(value.toString())));
-    return bool;
-  }
+@Data
+@Configuration
+@ConfigurationProperties(prefix = "auth")
+public class AuthProperties {
+
+    String jwtPublicKeyUrl;
+
+    String jwtPublicKeyStr;
+
+    GraphqlScopes graphqlScopes;
+
+    @Value
+    @ConstructorBinding
+    public static class GraphqlScopes {
+        ImmutableList<String> queryOnly;
+        ImmutableList<String> queryAndMutation;
+
+        public GraphqlScopes(List<String> queryOnly, List<String> queryAndMutation) {
+            this.queryOnly = ImmutableList.copyOf(queryOnly);
+            this.queryAndMutation = ImmutableList.copyOf(queryAndMutation);
+        }
+    }
+
 }

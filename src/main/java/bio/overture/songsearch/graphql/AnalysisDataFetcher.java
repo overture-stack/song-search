@@ -98,7 +98,6 @@ public class AnalysisDataFetcher {
     };
   }
 
-  @SneakyThrows
   private void validateAnalysisAndSamplesValidForQuery(Analysis analysis, List<FlatDonorSample> flatSamples) {
     if (analysis.getExperiment().get("experimental_strategy") == null) {
       throw new GraphQLException("Can't find matched T/N analyses for this analysis because it has no experimental_strategy!");

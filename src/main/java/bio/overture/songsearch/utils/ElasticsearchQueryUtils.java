@@ -42,13 +42,13 @@ public class ElasticsearchQueryUtils {
     args.forEach((key, value) ->
                          bool.must(
                                  QUERY_RESOLVER
-                                         .getOrDefault(key, simpleTermQueryBuilder(key))
+                                         .getOrDefault(key, simpleTermQueryBuilderResolver(key))
                                          .apply(value.toString())
                          ));
     return bool;
   }
 
-  private static Function<String, AbstractQueryBuilder<?>> simpleTermQueryBuilder(String key) {
+  private static Function<String, AbstractQueryBuilder<?>> simpleTermQueryBuilderResolver(String key) {
     return v -> new TermQueryBuilder(key, v);
   }
 }

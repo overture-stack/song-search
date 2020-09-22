@@ -18,17 +18,24 @@
 
 package bio.overture.songsearch.graphql;
 
+import static bio.overture.songsearch.config.SearchFields.*;
+import static bio.overture.songsearch.model.enums.SpecimenType.NORMAL;
+import static bio.overture.songsearch.model.enums.SpecimenType.TUMOUR;
+import static java.util.stream.Collectors.toUnmodifiableList;
+
 import bio.overture.songsearch.model.Analysis;
+import bio.overture.songsearch.model.Sample;
+import bio.overture.songsearch.model.MatchedAnalysisPair;
 import bio.overture.songsearch.service.AnalysisService;
 import com.google.common.collect.ImmutableMap;
 import graphql.schema.DataFetcher;
+import java.util.List;
+import java.util.Map;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Component
@@ -55,5 +62,67 @@ public class AnalysisDataFetcher {
       }
       return analysisService.getAnalyses(filter.build(), page.build());
     };
+  }
+
+  public DataFetcher<MatchedAnalysisPair> getAnalysisAndSampleMatchedAnalysesFetcher() {
+    return env -> {
+      val analysisId = env.getArguments().get("analysisId").toString();
+      val analysisFromId = analysisService.getAnalysisById(analysisId);
+
+      val samples = getFlattenedSamplesFromAnalysis(analysisFromId);
+      if (samples.size() != 1) {
+        throw new Error("Can't find matched T/N analyses for this analysis because it has multiple or no samples!");
+      }
+
+      val sampleOfInterest = (FlatDonorSample) samples.get(0);
+      val analysisType = analysisFromId.getAnalysisType();
+      val experimentalStrategy = analysisFromId.getExperiment().get("experimental_strategy");
+
+      val filter = ImmutableMap.<String, Object>builder();
+      filter.putAll(createTumourOrNormalSubmitterIdFilter(sampleOfInterest));
+      filter.put(ANALYSIS_TYPE, analysisType);
+      filter.put("experiment.experimental_strategy", experimentalStrategy);
+
+      val page = ImmutableMap.<String, Integer>builder();
+      page.put("size", 1);
+      page.put("from", 0);
+
+      return new MatchedAnalysisPair(
+              analysisFromId,
+              analysisService.getAnalyses(filter.build(), page.build()).get(0)
+      );
+    };
+  }
+
+  private Map<String, String> createTumourOrNormalSubmitterIdFilter(FlatDonorSample flatDonorSample) {
+    if (flatDonorSample.getTumourNormalDesignation().equalsIgnoreCase(TUMOUR.toString())) {
+      return Map.of(SUBMITTER_SAMPLE_ID, flatDonorSample.getMatchedNormalSubmitterSampleId());
+    } else if (flatDonorSample.getTumourNormalDesignation().equalsIgnoreCase(NORMAL.toString())) {
+      return Map.of(MATCHED_NORMAL_SUBMITTER_SAMPLE_ID, flatDonorSample.getSubmitterSampleId());
+    }
+    return Map.of();
+  }
+
+  private List<FlatDonorSample> getFlattenedSamplesFromAnalysis(Analysis analysis) {
+    return analysis.getDonors().stream().flatMap(
+            d -> d.getSpecimens().stream().flatMap(
+                    sp -> {
+                      val designation = sp.getTumourNormalDesignation();
+                      return sp.getSamples().stream().map(sam -> new FlatDonorSample(sam, designation));
+                    }))
+                   .collect(toUnmodifiableList());
+  }
+
+  @Value
+  static class FlatDonorSample {
+    String tumourNormalDesignation;
+    String submitterSampleId;
+    String matchedNormalSubmitterSampleId;
+
+    FlatDonorSample(Sample sample, String tumourNormalDesignation) {
+      this.tumourNormalDesignation = tumourNormalDesignation;
+      this.submitterSampleId = sample.getSubmitterSampleId();
+      this.matchedNormalSubmitterSampleId = sample.getMatchedNormalSubmitterSampleId();
+    }
   }
 }

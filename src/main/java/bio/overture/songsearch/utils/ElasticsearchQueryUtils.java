@@ -22,6 +22,7 @@ import lombok.val;
 import org.elasticsearch.index.query.AbstractQueryBuilder;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.TermQueryBuilder;
 
 import java.util.Map;
 import java.util.function.Function;
@@ -38,7 +39,16 @@ public class ElasticsearchQueryUtils {
       Map<String, Function<String, AbstractQueryBuilder<?>>> QUERY_RESOLVER,
       Map<String, Object> args) {
     val bool = QueryBuilders.boolQuery();
-    args.forEach((key, value) -> bool.must(QUERY_RESOLVER.get(key).apply(value.toString())));
+    args.forEach((key, value) ->
+                         bool.must(
+                                 QUERY_RESOLVER
+                                         .getOrDefault(key, simpleTermQueryBuilder(key))
+                                         .apply(value.toString())
+                         ));
     return bool;
+  }
+
+  private static Function<String, AbstractQueryBuilder<?>> simpleTermQueryBuilder(String key) {
+    return v -> new TermQueryBuilder(key, v);
   }
 }

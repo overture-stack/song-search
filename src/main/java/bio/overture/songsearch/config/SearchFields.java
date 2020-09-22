@@ -36,5 +36,7 @@ public class SearchFields {
   public static final String DONOR_ID = "donorId";
   public static final String SPECIMEN_ID = "specimenId";
   public static final String SAMPLE_ID = "sampleId";
+  public static final String SUBMITTER_SAMPLE_ID = "submitterSampleId";
+  public static final String MATCHED_NORMAL_SUBMITTER_SAMPLE_ID = "matchedNormalSubmitterSampleId";
   public static final String RUN_ID = "runId";
 }

@@ -86,6 +86,16 @@ public class AnalysisRepository {
             value ->
                 new NestedQueryBuilder(
                     "donors.specimens.samples", new TermQueryBuilder("donors.specimens.samples.sample_id", value), ScoreMode.None))
+       .put(
+               MATCHED_NORMAL_SUBMITTER_SAMPLE_ID,
+           value ->
+                new NestedQueryBuilder(
+                   "donors.specimens.samples", new TermQueryBuilder("donors.specimens.samples.matched_normal_submitter_sample_id", value), ScoreMode.None))
+       .put(
+           SUBMITTER_SAMPLE_ID,
+           value ->
+               new NestedQueryBuilder(
+                   "donors.specimens.samples", new TermQueryBuilder("donors.specimens.samples.submitter_sample_id", value), ScoreMode.None))
         .build();
   }
 

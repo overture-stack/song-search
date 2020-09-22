@@ -25,12 +25,17 @@ import static java.util.stream.Collectors.toUnmodifiableList;
 
 import bio.overture.songsearch.model.Analysis;
 import bio.overture.songsearch.model.Sample;
-import bio.overture.songsearch.model.MatchedAnalysisPair;
+import bio.overture.songsearch.model.SampleMatchedAnalysisPair;
 import bio.overture.songsearch.service.AnalysisService;
 import com.google.common.collect.ImmutableMap;
+import graphql.AssertException;
+import graphql.GraphQLException;
 import graphql.schema.DataFetcher;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
+import lombok.SneakyThrows;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -64,34 +69,43 @@ public class AnalysisDataFetcher {
     };
   }
 
-  public DataFetcher<MatchedAnalysisPair> getAnalysisAndSampleMatchedAnalysesFetcher() {
+  public DataFetcher<List<SampleMatchedAnalysisPair>> getSampleMatchedAnalysisPairsFetcher() {
     return env -> {
       val analysisId = env.getArguments().get("analysisId").toString();
+
       val analysisFromId = analysisService.getAnalysisById(analysisId);
-
       val samples = getFlattenedSamplesFromAnalysis(analysisFromId);
-      if (samples.size() != 1) {
-        throw new Error("Can't find matched T/N analyses for this analysis because it has multiple or no samples!");
-      }
 
-      val sampleOfInterest = (FlatDonorSample) samples.get(0);
+      validateAnalysisAndSamplesValidForQuery(analysisFromId, samples);
+
+      val flattenedSampleOfInterest = (FlatDonorSample) samples.get(0);
       val analysisType = analysisFromId.getAnalysisType();
       val experimentalStrategy = analysisFromId.getExperiment().get("experimental_strategy");
+      val tnDesignation = flattenedSampleOfInterest.getTumourNormalDesignation();
 
       val filter = ImmutableMap.<String, Object>builder();
-      filter.putAll(createTumourOrNormalSubmitterIdFilter(sampleOfInterest));
+      filter.putAll(createTumourOrNormalSubmitterIdFilter(flattenedSampleOfInterest));
       filter.put(ANALYSIS_TYPE, analysisType);
       filter.put("experiment.experimental_strategy", experimentalStrategy);
 
-      val page = ImmutableMap.<String, Integer>builder();
-      page.put("size", 1);
-      page.put("from", 0);
+      val matchedAnalyses = analysisService.getAnalyses(filter.build(), null);
 
-      return new MatchedAnalysisPair(
-              analysisFromId,
-              analysisService.getAnalyses(filter.build(), page.build()).get(0)
-      );
+      return matchedAnalyses.stream()
+                     .map(a -> tnDesignation.equalsIgnoreCase(TUMOUR.toString()) ?
+                                       new SampleMatchedAnalysisPair(a, analysisFromId) :
+                                       new SampleMatchedAnalysisPair(analysisFromId, a))
+                     .collect(Collectors.toUnmodifiableList());
     };
+  }
+
+  @SneakyThrows
+  private void validateAnalysisAndSamplesValidForQuery(Analysis analysis, List<FlatDonorSample> flatSamples) {
+    if (analysis.getExperiment().get("experimental_strategy") == null) {
+      throw new GraphQLException("Can't find matched T/N analyses for this analysis because it has no experimental_strategy!");
+    }
+    if (flatSamples.size() != 1) {
+      throw new GraphQLException("Can't find matched T/N analyses for this analysis because it has multiple or no samples!");
+    }
   }
 
   private Map<String, String> createTumourOrNormalSubmitterIdFilter(FlatDonorSample flatDonorSample) {

@@ -133,7 +133,7 @@ public class GraphQLProvider {
         .type(
             newTypeWiring("Query")
                 .dataFetcher(
-                    "analysisAndSampleMatchedAnalysis", analysisDataFetcher.getAnalysisAndSampleMatchedAnalysesFetcher()))
+                    "sampleMatchedAnalysisPairs", analysisDataFetcher.getSampleMatchedAnalysisPairsFetcher()))
         .build();
   }
 

@@ -72,70 +72,7 @@ public class AnalysisDataFetcher {
   public DataFetcher<List<SampleMatchedAnalysisPair>> getSampleMatchedAnalysisPairsFetcher() {
     return env -> {
       val analysisId = env.getArguments().get("analysisId").toString();
-
-      val analysisFromId = analysisService.getAnalysisById(analysisId);
-      val samples = getFlattenedSamplesFromAnalysis(analysisFromId);
-
-      validateAnalysisAndSamplesValidForQuery(analysisFromId, samples);
-
-      val flattenedSampleOfInterest = (FlatDonorSample) samples.get(0);
-      val analysisType = analysisFromId.getAnalysisType();
-      val experimentalStrategy = analysisFromId.getExperiment().get("experimental_strategy");
-      val tnDesignation = flattenedSampleOfInterest.getTumourNormalDesignation();
-
-      val filter = ImmutableMap.<String, Object>builder();
-      filter.putAll(createTumourOrNormalSubmitterIdFilter(flattenedSampleOfInterest));
-      filter.put(ANALYSIS_TYPE, analysisType);
-      filter.put("experiment.experimental_strategy", experimentalStrategy);
-
-      val matchedAnalyses = analysisService.getAnalyses(filter.build(), null);
-
-      return matchedAnalyses.stream()
-                     .map(a -> tnDesignation.equalsIgnoreCase(TUMOUR.toString()) ?
-                                       new SampleMatchedAnalysisPair(a, analysisFromId) :
-                                       new SampleMatchedAnalysisPair(analysisFromId, a))
-                     .collect(Collectors.toUnmodifiableList());
+      return analysisService.getSampleMatchedAnalysisPairs(analysisId);
     };
-  }
-
-  private void validateAnalysisAndSamplesValidForQuery(Analysis analysis, List<FlatDonorSample> flatSamples) {
-    if (analysis.getExperiment().get("experimental_strategy") == null) {
-      throw new GraphQLException("Can't find matched T/N analyses for this analysis because it has no experimental_strategy!");
-    }
-    if (flatSamples.size() != 1) {
-      throw new GraphQLException("Can't find matched T/N analyses for this analysis because it has multiple or no samples!");
-    }
-  }
-
-  private Map<String, String> createTumourOrNormalSubmitterIdFilter(FlatDonorSample flatDonorSample) {
-    if (flatDonorSample.getTumourNormalDesignation().equalsIgnoreCase(TUMOUR.toString())) {
-      return Map.of(SUBMITTER_SAMPLE_ID, flatDonorSample.getMatchedNormalSubmitterSampleId());
-    } else if (flatDonorSample.getTumourNormalDesignation().equalsIgnoreCase(NORMAL.toString())) {
-      return Map.of(MATCHED_NORMAL_SUBMITTER_SAMPLE_ID, flatDonorSample.getSubmitterSampleId());
-    }
-    return Map.of();
-  }
-
-  private List<FlatDonorSample> getFlattenedSamplesFromAnalysis(Analysis analysis) {
-    return analysis.getDonors().stream().flatMap(
-            d -> d.getSpecimens().stream().flatMap(
-                    sp -> {
-                      val designation = sp.getTumourNormalDesignation();
-                      return sp.getSamples().stream().map(sam -> new FlatDonorSample(sam, designation));
-                    }))
-                   .collect(toUnmodifiableList());
-  }
-
-  @Value
-  static class FlatDonorSample {
-    String tumourNormalDesignation;
-    String submitterSampleId;
-    String matchedNormalSubmitterSampleId;
-
-    FlatDonorSample(Sample sample, String tumourNormalDesignation) {
-      this.tumourNormalDesignation = tumourNormalDesignation;
-      this.submitterSampleId = sample.getSubmitterSampleId();
-      this.matchedNormalSubmitterSampleId = sample.getMatchedNormalSubmitterSampleId();
-    }
   }
 }

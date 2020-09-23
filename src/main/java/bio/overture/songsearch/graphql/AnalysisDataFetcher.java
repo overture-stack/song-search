@@ -18,29 +18,18 @@
 
 package bio.overture.songsearch.graphql;
 
-import static bio.overture.songsearch.config.SearchFields.*;
-import static bio.overture.songsearch.model.enums.SpecimenType.NORMAL;
-import static bio.overture.songsearch.model.enums.SpecimenType.TUMOUR;
-import static java.util.stream.Collectors.toUnmodifiableList;
-
 import bio.overture.songsearch.model.Analysis;
-import bio.overture.songsearch.model.Sample;
 import bio.overture.songsearch.model.SampleMatchedAnalysisPair;
 import bio.overture.songsearch.service.AnalysisService;
 import com.google.common.collect.ImmutableMap;
-import graphql.AssertException;
-import graphql.GraphQLException;
 import graphql.schema.DataFetcher;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import lombok.SneakyThrows;
-import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Component

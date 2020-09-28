@@ -18,8 +18,14 @@
 
 package bio.overture.songsearch.repository;
 
+import static bio.overture.songsearch.config.SearchFields.*;
+import static bio.overture.songsearch.utils.ElasticsearchQueryUtils.queryFromArgs;
+import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
+
 import bio.overture.songsearch.config.ElasticsearchProperties;
 import com.google.common.collect.ImmutableMap;
+import java.util.Map;
+import java.util.function.Function;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -35,13 +41,6 @@ import org.elasticsearch.index.query.TermQueryBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.util.Map;
-import java.util.function.Function;
-
-import static bio.overture.songsearch.config.SearchFields.*;
-import static bio.overture.songsearch.utils.ElasticsearchQueryUtils.queryFromArgs;
-import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 
 @Slf4j
 @Component

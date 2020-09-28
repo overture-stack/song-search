@@ -23,13 +23,12 @@ import bio.overture.songsearch.model.SampleMatchedAnalysisPair;
 import bio.overture.songsearch.service.AnalysisService;
 import com.google.common.collect.ImmutableMap;
 import graphql.schema.DataFetcher;
+import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Component

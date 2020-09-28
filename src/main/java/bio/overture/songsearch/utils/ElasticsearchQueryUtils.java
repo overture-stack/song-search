@@ -1,10 +1,10 @@
 /*
  * Copyright (c) 2020 The Ontario Institute for Cancer Research. All rights reserved
- *  
+ *
  * This program and the accompanying materials are made available under the terms of the GNU Affero General Public License v3.0.
  * You should have received a copy of the GNU Affero General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
- *  
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
@@ -18,14 +18,13 @@
 
 package bio.overture.songsearch.utils;
 
+import java.util.Map;
+import java.util.function.Function;
 import lombok.val;
 import org.elasticsearch.index.query.AbstractQueryBuilder;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.TermQueryBuilder;
-
-import java.util.Map;
-import java.util.function.Function;
 
 public class ElasticsearchQueryUtils {
   /**
@@ -39,16 +38,17 @@ public class ElasticsearchQueryUtils {
       Map<String, Function<String, AbstractQueryBuilder<?>>> QUERY_RESOLVER,
       Map<String, Object> args) {
     val bool = QueryBuilders.boolQuery();
-    args.forEach((key, value) ->
-                         bool.must(
-                                 QUERY_RESOLVER
-                                         .getOrDefault(key, simpleTermQueryBuilderResolver(key))
-                                         .apply(value.toString())
-                         ));
+    args.forEach(
+        (key, value) ->
+            bool.must(
+                QUERY_RESOLVER
+                    .getOrDefault(key, simpleTermQueryBuilderResolver(key))
+                    .apply(value.toString())));
     return bool;
   }
 
-  private static Function<String, AbstractQueryBuilder<?>> simpleTermQueryBuilderResolver(String key) {
+  private static Function<String, AbstractQueryBuilder<?>> simpleTermQueryBuilderResolver(
+      String key) {
     return v -> new TermQueryBuilder(key, v);
   }
 }

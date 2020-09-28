@@ -18,6 +18,8 @@
 
 package bio.overture.songsearch.graphql;
 
+import static graphql.schema.idl.TypeRuntimeWiring.newTypeWiring;
+
 import bio.overture.songsearch.config.websecurity.AuthProperties;
 import bio.overture.songsearch.graphql.security.VerifyAuthQueryExecutionStrategyDecorator;
 import bio.overture.songsearch.model.Analysis;
@@ -33,17 +35,14 @@ import graphql.execution.AsyncExecutionStrategy;
 import graphql.scalars.ExtendedScalars;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.idl.RuntimeWiring;
+import java.io.IOException;
+import java.net.URL;
+import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
-
-import javax.annotation.PostConstruct;
-import java.io.IOException;
-import java.net.URL;
-
-import static graphql.schema.idl.TypeRuntimeWiring.newTypeWiring;
 
 @Slf4j
 @Service
@@ -58,10 +57,10 @@ public class GraphQLProvider {
 
   @Autowired
   public GraphQLProvider(
-          AnalysisDataFetcher analysisDataFetcher,
-          FileDataFetcher fileDataFetcher,
-          EntityDataFetcher entityDataFetcher,
-          AuthProperties authProperties) {
+      AnalysisDataFetcher analysisDataFetcher,
+      FileDataFetcher fileDataFetcher,
+      EntityDataFetcher entityDataFetcher,
+      AuthProperties authProperties) {
     this.analysisDataFetcher = analysisDataFetcher;
     this.fileDataFetcher = fileDataFetcher;
     this.entityDataFetcher = entityDataFetcher;
@@ -77,14 +76,15 @@ public class GraphQLProvider {
   @Bean
   @Profile("secure")
   public GraphQL secureGraphQL() {
-      return graphQL.transform(this::toSecureGraphql);
+    return graphQL.transform(this::toSecureGraphql);
   }
 
   private void toSecureGraphql(GraphQL.Builder graphQLBuilder) {
-      // For more info on `Execution Strategies` see: https://www.graphql-java.com/documentation/v15/execution/
-      graphQLBuilder.queryExecutionStrategy(
-              new VerifyAuthQueryExecutionStrategyDecorator(new AsyncExecutionStrategy(), queryScopesToCheck())
-      );
+    // For more info on `Execution Strategies` see:
+    // https://www.graphql-java.com/documentation/v15/execution/
+    graphQLBuilder.queryExecutionStrategy(
+        new VerifyAuthQueryExecutionStrategyDecorator(
+            new AsyncExecutionStrategy(), queryScopesToCheck()));
   }
 
   @PostConstruct
@@ -127,22 +127,19 @@ public class GraphQLProvider {
         .type(
             newTypeWiring("Query")
                 .dataFetcher("analyses", analysisDataFetcher.getAnalysesDataFetcher()))
-        .type(
-            newTypeWiring("Query")
-                .dataFetcher("files", fileDataFetcher.getFilesDataFetcher()))
+        .type(newTypeWiring("Query").dataFetcher("files", fileDataFetcher.getFilesDataFetcher()))
         .type(
             newTypeWiring("Query")
                 .dataFetcher(
-                    "sampleMatchedAnalysisPairs", analysisDataFetcher.getSampleMatchedAnalysisPairsFetcher()))
+                    "sampleMatchedAnalysisPairs",
+                    analysisDataFetcher.getSampleMatchedAnalysisPairsFetcher()))
         .build();
   }
 
   private ImmutableList<String> queryScopesToCheck() {
-      return ImmutableList.copyOf(
-              Iterables.concat(
-                      authProperties.getGraphqlScopes().getQueryOnly(),
-                      authProperties.getGraphqlScopes().getQueryAndMutation()
-              ));
-
+    return ImmutableList.copyOf(
+        Iterables.concat(
+            authProperties.getGraphqlScopes().getQueryOnly(),
+            authProperties.getGraphqlScopes().getQueryAndMutation()));
   }
 }

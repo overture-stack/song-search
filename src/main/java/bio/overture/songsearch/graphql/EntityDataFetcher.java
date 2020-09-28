@@ -18,6 +18,8 @@
 
 package bio.overture.songsearch.graphql;
 
+import static java.util.stream.Collectors.toList;
+
 import bio.overture.songsearch.config.SongSearchProperties;
 import bio.overture.songsearch.model.Run;
 import bio.overture.songsearch.service.AnalysisService;
@@ -26,16 +28,13 @@ import com.apollographql.federation.graphqljava._Entity;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import graphql.schema.DataFetcher;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-
-import static java.util.stream.Collectors.toList;
 
 @Slf4j
 @Component
@@ -49,7 +48,10 @@ public class EntityDataFetcher {
   private final SongSearchProperties songSearchProperties;
 
   @Autowired
-  public EntityDataFetcher(AnalysisService analysisService, FileService fileService, SongSearchProperties songSearchProperties) {
+  public EntityDataFetcher(
+      AnalysisService analysisService,
+      FileService fileService,
+      SongSearchProperties songSearchProperties) {
     this.analysisService = analysisService;
     this.fileService = fileService;
     this.songSearchProperties = songSearchProperties;
@@ -80,8 +82,7 @@ public class EntityDataFetcher {
                       return new Run(
                           (String) runId,
                           analysisService.getAnalysesByRunId((String) runId),
-                          analysisService.getAnalysesById(ids)
-                          );
+                          analysisService.getAnalysesById(ids));
                     }
                   }
                   return null;
@@ -89,24 +90,25 @@ public class EntityDataFetcher {
             .collect(toList());
   }
 
-    private List<String> getRelevantAnalysisIdsFromRunParameters(Object parametersObj) {
-      val parametersBuilder = ImmutableMap.<String, Object>builder();
-      if (parametersObj instanceof Map) {
-          try {
-              val parametersMap = (Map<String, Object>) parametersObj;
-              parametersBuilder.putAll(parametersMap);
-          } catch (ClassCastException e) {
-              log.error("Failed to cast parametersObj to Map<String, Object>");
-          }
+  private List<String> getRelevantAnalysisIdsFromRunParameters(Object parametersObj) {
+    val parametersBuilder = ImmutableMap.<String, Object>builder();
+    if (parametersObj instanceof Map) {
+      try {
+        val parametersMap = (Map<String, Object>) parametersObj;
+        parametersBuilder.putAll(parametersMap);
+      } catch (ClassCastException e) {
+        log.error("Failed to cast parametersObj to Map<String, Object>");
       }
-      val parameters = parametersBuilder.build();
+    }
+    val parameters = parametersBuilder.build();
 
-      ImmutableList<String> analysisIdKeysToLookFor = songSearchProperties.getWorkflowRunParameterKeys().getAnalysisId();
+    ImmutableList<String> analysisIdKeysToLookFor =
+        songSearchProperties.getWorkflowRunParameterKeys().getAnalysisId();
 
-      return analysisIdKeysToLookFor.stream()
-                                .map(parameters::get)
-                                .filter(Objects::nonNull)
-                                .map(Objects::toString)
-                                .collect(toList());
+    return analysisIdKeysToLookFor.stream()
+        .map(parameters::get)
+        .filter(Objects::nonNull)
+        .map(Objects::toString)
+        .collect(toList());
   }
 }

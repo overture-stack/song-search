@@ -142,7 +142,13 @@ type Run @key(fields: "runId") @extends {
     inputAnalyses: [Analysis] @requires(fields: "parameters")
 }
 
+type SampleMatchedAnalysisPair {
+    normalSampleAnalysis: Analysis
+    tumourSampleAnalysis: Analysis
+}
+
 extend type Query {
     analyses(filter: AnalysisFilter, page: Page): [Analysis]
     files(filter: FileFilter, page: Page): [File]
+    sampleMatchedAnalysisPairs(analysisId: String!): [SampleMatchedAnalysisPair]
 }

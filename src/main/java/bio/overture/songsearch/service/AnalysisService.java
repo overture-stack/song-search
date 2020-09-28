@@ -18,26 +18,25 @@
 
 package bio.overture.songsearch.service;
 
-import bio.overture.songsearch.model.Analysis;
-import bio.overture.songsearch.model.Sample;
-import bio.overture.songsearch.model.SampleMatchedAnalysisPair;
-import bio.overture.songsearch.repository.AnalysisRepository;
-import com.google.common.collect.ImmutableMap;
-import lombok.Value;
-import lombok.val;
-import org.elasticsearch.action.search.MultiSearchResponse;
-import org.elasticsearch.search.SearchHit;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.util.*;
-
 import static bio.overture.songsearch.config.SearchFields.*;
 import static bio.overture.songsearch.model.enums.SpecimenType.NORMAL;
 import static bio.overture.songsearch.model.enums.SpecimenType.TUMOUR;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toUnmodifiableList;
+
+import bio.overture.songsearch.model.Analysis;
+import bio.overture.songsearch.model.Sample;
+import bio.overture.songsearch.model.SampleMatchedAnalysisPair;
+import bio.overture.songsearch.repository.AnalysisRepository;
+import com.google.common.collect.ImmutableMap;
+import java.util.*;
+import lombok.Value;
+import lombok.val;
+import org.elasticsearch.action.search.MultiSearchResponse;
+import org.elasticsearch.search.SearchHit;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 @Service
 public class AnalysisService {
@@ -73,58 +72,73 @@ public class AnalysisService {
     return hitStream.map(AnalysisService::hitToAnalysis).collect(toUnmodifiableList());
   }
 
- public List<Analysis> getAnalysesById(List<String> analysisIds) {
-    val multipleFilters = analysisIds.stream().map(id -> Map.of(ANALYSIS_ID, (Object) id)).collect(toList());
+  public List<Analysis> getAnalysesById(List<String> analysisIds) {
+    val multipleFilters =
+        analysisIds.stream().map(id -> Map.of(ANALYSIS_ID, (Object) id)).collect(toList());
     val multiSearchResponse = analysisRepository.getAnalyses(multipleFilters, null);
     return Arrays.stream(multiSearchResponse.getResponses())
-                            .map(MultiSearchResponse.Item::getResponse)
-                            .map(res -> Arrays.stream(res.getHits().getHits())
-                                              .map(AnalysisService::hitToAnalysis)
-                                              .findFirst())
-                            .filter(Optional::isPresent)
-                            .map(Optional::get)
-                            .collect(toUnmodifiableList());
- }
+        .map(MultiSearchResponse.Item::getResponse)
+        .map(
+            res ->
+                Arrays.stream(res.getHits().getHits())
+                    .map(AnalysisService::hitToAnalysis)
+                    .findFirst())
+        .filter(Optional::isPresent)
+        .map(Optional::get)
+        .collect(toUnmodifiableList());
+  }
 
- public List<SampleMatchedAnalysisPair> getSampleMatchedAnalysisPairs(String analysisId) {
-   val analysisFromId = getAnalysisById(analysisId);
-   val flattenedSamples = getFlattenedSamplesFromAnalysis(analysisFromId);
-   val experimentalStrategy = analysisFromId.getExperiment().get("experimental_strategy");
+  public List<SampleMatchedAnalysisPair> getSampleMatchedAnalysisPairs(String analysisId) {
+    val analysisFromId = getAnalysisById(analysisId);
+    val flattenedSamples = getFlattenedSamplesFromAnalysis(analysisFromId);
+    val experimentalStrategy = analysisFromId.getExperiment().get("experimental_strategy");
 
-   // short circuit return if can't find sample matched pairs for analysisFromId
-   if (experimentalStrategy == null || flattenedSamples.size() != 1) {
-     return emptyList();
-   }
+    // short circuit return if can't find sample matched pairs for analysisFromId
+    if (experimentalStrategy == null || flattenedSamples.size() != 1) {
+      return emptyList();
+    }
 
-   val flattenedSampleOfInterest = flattenedSamples.get(0);
-   val tumourNormalDesignation = flattenedSampleOfInterest.getTumourNormalDesignation();
+    val flattenedSampleOfInterest = flattenedSamples.get(0);
+    val tumourNormalDesignation = flattenedSampleOfInterest.getTumourNormalDesignation();
 
-   val filter = ImmutableMap.<String, Object>builder();
+    val filter = ImmutableMap.<String, Object>builder();
 
-   if (flattenedSampleOfInterest.getTumourNormalDesignation().equalsIgnoreCase(TUMOUR.toString())) {
-     filter.put(SUBMITTER_SAMPLE_ID, flattenedSampleOfInterest.getMatchedNormalSubmitterSampleId());
-   } else if (flattenedSampleOfInterest.getTumourNormalDesignation().equalsIgnoreCase(NORMAL.toString())) {
-     filter.put(MATCHED_NORMAL_SUBMITTER_SAMPLE_ID, flattenedSampleOfInterest.getSubmitterSampleId());
-   }
+    if (flattenedSampleOfInterest
+        .getTumourNormalDesignation()
+        .equalsIgnoreCase(TUMOUR.toString())) {
+      filter.put(
+          SUBMITTER_SAMPLE_ID, flattenedSampleOfInterest.getMatchedNormalSubmitterSampleId());
+    } else if (flattenedSampleOfInterest
+        .getTumourNormalDesignation()
+        .equalsIgnoreCase(NORMAL.toString())) {
+      filter.put(
+          MATCHED_NORMAL_SUBMITTER_SAMPLE_ID, flattenedSampleOfInterest.getSubmitterSampleId());
+    }
 
-   filter.put(ANALYSIS_TYPE, analysisFromId.getAnalysisType());
-   filter.put("experiment.experimental_strategy", experimentalStrategy);
+    filter.put(ANALYSIS_TYPE, analysisFromId.getAnalysisType());
+    filter.put("experiment.experimental_strategy", experimentalStrategy);
 
-   return getAnalyses(filter.build(), null).stream()
-                  .map(a -> tumourNormalDesignation.equalsIgnoreCase(TUMOUR.toString()) ?
-                                    new SampleMatchedAnalysisPair(a, analysisFromId) :
-                                    new SampleMatchedAnalysisPair(analysisFromId, a))
-                  .collect(toUnmodifiableList());
+    return getAnalyses(filter.build(), null).stream()
+        .map(
+            a ->
+                tumourNormalDesignation.equalsIgnoreCase(TUMOUR.toString())
+                    ? new SampleMatchedAnalysisPair(a, analysisFromId)
+                    : new SampleMatchedAnalysisPair(analysisFromId, a))
+        .collect(toUnmodifiableList());
   }
 
   private List<FlatDonorSample> getFlattenedSamplesFromAnalysis(Analysis analysis) {
-    return analysis.getDonors().stream().flatMap(
-            d -> d.getSpecimens().stream().flatMap(
-                    sp -> {
-                      val designation = sp.getTumourNormalDesignation();
-                      return sp.getSamples().stream().map(sam -> new FlatDonorSample(sam, designation));
-                    }))
-                   .collect(toUnmodifiableList());
+    return analysis.getDonors().stream()
+        .flatMap(
+            d ->
+                d.getSpecimens().stream()
+                    .flatMap(
+                        sp -> {
+                          val designation = sp.getTumourNormalDesignation();
+                          return sp.getSamples().stream()
+                              .map(sam -> new FlatDonorSample(sam, designation));
+                        }))
+        .collect(toUnmodifiableList());
   }
 
   @Value

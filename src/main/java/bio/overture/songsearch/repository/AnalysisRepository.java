@@ -18,8 +18,15 @@
 
 package bio.overture.songsearch.repository;
 
+import static bio.overture.songsearch.config.SearchFields.*;
+import static bio.overture.songsearch.utils.ElasticsearchQueryUtils.queryFromArgs;
+import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
+
 import bio.overture.songsearch.config.ElasticsearchProperties;
 import com.google.common.collect.ImmutableMap;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -37,14 +44,6 @@ import org.elasticsearch.index.query.TermQueryBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
-import static bio.overture.songsearch.config.SearchFields.*;
-import static bio.overture.songsearch.utils.ElasticsearchQueryUtils.queryFromArgs;
-import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 
 @Slf4j
 @Component
@@ -80,12 +79,31 @@ public class AnalysisRepository {
             SPECIMEN_ID,
             value ->
                 new NestedQueryBuilder(
-                    "donors.specimens", new TermQueryBuilder("donors.specimens.specimen_id", value), ScoreMode.None))
+                    "donors.specimens",
+                    new TermQueryBuilder("donors.specimens.specimen_id", value),
+                    ScoreMode.None))
         .put(
             SAMPLE_ID,
             value ->
                 new NestedQueryBuilder(
-                    "donors.specimens.samples", new TermQueryBuilder("donors.specimens.samples.sample_id", value), ScoreMode.None))
+                    "donors.specimens.samples",
+                    new TermQueryBuilder("donors.specimens.samples.sample_id", value),
+                    ScoreMode.None))
+        .put(
+            MATCHED_NORMAL_SUBMITTER_SAMPLE_ID,
+            value ->
+                new NestedQueryBuilder(
+                    "donors.specimens.samples",
+                    new TermQueryBuilder(
+                        "donors.specimens.samples.matched_normal_submitter_sample_id", value),
+                    ScoreMode.None))
+        .put(
+            SUBMITTER_SAMPLE_ID,
+            value ->
+                new NestedQueryBuilder(
+                    "donors.specimens.samples",
+                    new TermQueryBuilder("donors.specimens.samples.submitter_sample_id", value),
+                    ScoreMode.None))
         .build();
   }
 
@@ -100,8 +118,10 @@ public class AnalysisRepository {
     return execute(searchSourceBuilder);
   }
 
-  public MultiSearchResponse getAnalyses(List<Map<String, Object>> multipleFilters, Map<String, Integer> page) {
-    List<SearchSourceBuilder> searchSourceBuilders = multipleFilters.stream()
+  public MultiSearchResponse getAnalyses(
+      List<Map<String, Object>> multipleFilters, Map<String, Integer> page) {
+    List<SearchSourceBuilder> searchSourceBuilders =
+        multipleFilters.stream()
             .filter(f -> f != null && f.size() != 0)
             .map(f -> createSearchSourceBuilder(queryFromArgs(QUERY_RESOLVER, f), page))
             .collect(Collectors.toList());
@@ -113,7 +133,8 @@ public class AnalysisRepository {
     return execute(searchSourceBuilders);
   }
 
-  private SearchSourceBuilder createSearchSourceBuilder(AbstractQueryBuilder<?> query, Map<String, Integer> page) {
+  private SearchSourceBuilder createSearchSourceBuilder(
+      AbstractQueryBuilder<?> query, Map<String, Integer> page) {
     val searchSourceBuilder = new SearchSourceBuilder();
     searchSourceBuilder.query(query);
 

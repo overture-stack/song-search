@@ -18,19 +18,18 @@
 
 package bio.overture.songsearch.service;
 
+import static bio.overture.songsearch.config.SearchFields.FILE_OBJECT_ID;
+import static java.util.stream.Collectors.toUnmodifiableList;
+
 import bio.overture.songsearch.model.File;
 import bio.overture.songsearch.repository.FileRepository;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import lombok.val;
 import org.elasticsearch.search.SearchHit;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
-import static bio.overture.songsearch.config.SearchFields.FILE_OBJECT_ID;
-import static java.util.stream.Collectors.toUnmodifiableList;
 
 @Service
 public class FileService {

@@ -16,14 +16,12 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package bio.overture.songsearch;
+package bio.overture.songsearch.model;
 
-import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
+import lombok.Value;
 
-@SpringBootTest
-class SongSearchApplicationTests {
-
-  @Test
-  void contextLoads() {}
+@Value
+public class SampleMatchedAnalysisPair {
+  Analysis normalSampleAnalysis;
+  Analysis tumourSampleAnalysis;
 }

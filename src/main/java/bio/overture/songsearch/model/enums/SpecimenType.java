@@ -16,14 +16,20 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package bio.overture.songsearch;
+package bio.overture.songsearch.model.enums;
 
-import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
-@SpringBootTest
-class SongSearchApplicationTests {
+@RequiredArgsConstructor
+public enum SpecimenType {
+  NORMAL("Normal"),
+  TUMOUR("Tumour");
 
-  @Test
-  void contextLoads() {}
+  @NonNull private final String value;
+
+  @Override
+  public String toString() {
+    return value;
+  }
 }

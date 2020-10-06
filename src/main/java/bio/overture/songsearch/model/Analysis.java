@@ -49,6 +49,8 @@ public class Analysis {
 
   private List<AnalysisFile> files;
 
+  private List<Repository> repositories;
+
   private Map<String, Object> experiment;
 
   private Workflow workflow;

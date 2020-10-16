@@ -21,6 +21,7 @@ package bio.overture.songsearch.graphql;
 import static java.util.stream.Collectors.toList;
 
 import bio.overture.songsearch.config.SongSearchProperties;
+import bio.overture.songsearch.model.Analysis;
 import bio.overture.songsearch.model.Run;
 import bio.overture.songsearch.service.AnalysisService;
 import bio.overture.songsearch.service.FileService;
@@ -31,6 +32,8 @@ import graphql.schema.DataFetcher;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+
+import graphql.schema.DataFetchingEnvironment;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -79,7 +82,7 @@ public class EntityDataFetcher {
                     val ids = getRelevantAnalysisIdsFromRunParameters(values.get("parameters"));
 
                     if (runId instanceof String) {
-                      return new Run(
+                      return new RunWithNestedFetch(
                           (String) runId,
                           analysisService.getAnalysesByRunId((String) runId),
                           analysisService.getAnalysesById(ids));
@@ -110,5 +113,27 @@ public class EntityDataFetcher {
         .filter(Objects::nonNull)
         .map(Objects::toString)
         .collect(toList());
+  }
+
+
+  class RunWithNestedFetch extends Run {
+    public RunWithNestedFetch(String runId, List<Analysis> producedAnalyses, List<Analysis> inputAnalyses) {
+      super(runId, producedAnalyses, inputAnalyses);
+    }
+
+    @Override
+    public List<Analysis> getInputAnalyses(DataFetchingEnvironment environment) {
+      // TODO include relevant analysis Id..
+      val args = environment.getArguments();
+
+      val filter = ImmutableMap.<String, Object>builder();
+      val page = ImmutableMap.<String, Integer>builder();
+
+      if (args != null) {
+        if (args.get("filter") != null) filter.putAll((Map<String, Object>) args.get("filter"));
+        if (args.get("page") != null) page.putAll((Map<String, Integer>) args.get("page"));
+      }
+      return analysisService.getAnalyses(filter.build(), page.build());
+    }
   }
 }

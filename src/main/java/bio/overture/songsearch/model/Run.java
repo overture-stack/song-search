@@ -18,16 +18,17 @@
 
 package bio.overture.songsearch.model;
 
+import bio.overture.songsearch.service.AnalysisService;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import java.util.List;
 import java.util.Map;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NonNull;
-import lombok.SneakyThrows;
+
+import com.google.common.collect.ImmutableMap;
+import graphql.schema.DataFetchingEnvironment;
+import lombok.*;
 
 @Data
 @AllArgsConstructor
@@ -42,8 +43,19 @@ public class Run {
 
   private List<Analysis> inputAnalyses;
 
+//  private AnalysisService analysisService;
+//
+//  public Run(String runId, AnalysisService analysisService) {
+//    this.runId = runId;
+//    this.analysisService = analysisService;
+//  }
+
   @SneakyThrows
   public static Run parse(@NonNull Map<String, Object> sourceMap) {
     return MAPPER.convertValue(sourceMap, Run.class);
   }
+
+  public List<Analysis> getInputAnalyses(DataFetchingEnvironment environment) {
+      return List.of();
+  };
 }

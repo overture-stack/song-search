@@ -138,8 +138,8 @@ input Page {
 type Run @key(fields: "runId") @extends {
     runId: ID! @external
     parameters: JSON @external
-    producedAnalyses: [Analysis]
-    inputAnalyses: [Analysis] @requires(fields: "parameters")
+    producedAnalyses(filter: AnalysisFilter, page: Page): [Analysis]
+    inputAnalyses(filter: AnalysisFilter, page: Page): [Analysis] @requires(fields: "parameters")
 }
 
 type SampleMatchedAnalysisPair {

@@ -22,6 +22,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import graphql.schema.DataFetcher;
+import graphql.schema.DataFetchingEnvironment;
 import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;
@@ -38,12 +40,22 @@ public class Run {
 
   private String runId;
 
-  private List<Analysis> producedAnalyses;
+  private DataFetcher<List<Analysis>> producedAnalysesFetcher;
 
-  private List<Analysis> inputAnalyses;
+  private DataFetcher<List<Analysis>> inputAnalysesFetcher;
 
   @SneakyThrows
   public static Run parse(@NonNull Map<String, Object> sourceMap) {
     return MAPPER.convertValue(sourceMap, Run.class);
+  }
+
+  @SneakyThrows
+  public List<Analysis> getInputAnalyses(DataFetchingEnvironment env) {
+    return inputAnalysesFetcher.get(env);
+  }
+
+  @SneakyThrows
+  public List<Analysis> getProducedAnalyses(DataFetchingEnvironment env) {
+    return producedAnalysesFetcher.get(env);
   }
 }

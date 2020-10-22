@@ -22,7 +22,6 @@ import static bio.overture.songsearch.config.SearchFields.*;
 import static bio.overture.songsearch.model.enums.SpecimenType.NORMAL;
 import static bio.overture.songsearch.model.enums.SpecimenType.TUMOUR;
 import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toUnmodifiableList;
 
 import bio.overture.songsearch.model.Analysis;
@@ -72,9 +71,7 @@ public class AnalysisService {
     return hitStream.map(AnalysisService::hitToAnalysis).collect(toUnmodifiableList());
   }
 
-  public List<Analysis> getAnalysesById(List<String> analysisIds) {
-    val multipleFilters =
-        analysisIds.stream().map(id -> Map.of(ANALYSIS_ID, (Object) id)).collect(toList());
+  public List<Analysis> getAnalyses(List<Map<String, Object>> multipleFilters) {
     val multiSearchResponse = analysisRepository.getAnalyses(multipleFilters, null);
     return Arrays.stream(multiSearchResponse.getResponses())
         .map(MultiSearchResponse.Item::getResponse)

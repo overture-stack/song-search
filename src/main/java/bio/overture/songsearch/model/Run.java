@@ -18,17 +18,18 @@
 
 package bio.overture.songsearch.model;
 
-import bio.overture.songsearch.service.AnalysisService;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import graphql.schema.DataFetcher;
+import graphql.schema.DataFetchingEnvironment;
 import java.util.List;
 import java.util.Map;
-
-import com.google.common.collect.ImmutableMap;
-import graphql.schema.DataFetchingEnvironment;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NonNull;
+import lombok.SneakyThrows;
 
 @Data
 @AllArgsConstructor
@@ -39,23 +40,22 @@ public class Run {
 
   private String runId;
 
-  private List<Analysis> producedAnalyses;
+  private DataFetcher<List<Analysis>> producedAnalysesFetcher;
 
-  private List<Analysis> inputAnalyses;
-
-//  private AnalysisService analysisService;
-//
-//  public Run(String runId, AnalysisService analysisService) {
-//    this.runId = runId;
-//    this.analysisService = analysisService;
-//  }
+  private DataFetcher<List<Analysis>> inputAnalysesFetcher;
 
   @SneakyThrows
   public static Run parse(@NonNull Map<String, Object> sourceMap) {
     return MAPPER.convertValue(sourceMap, Run.class);
   }
 
-  public List<Analysis> getInputAnalyses(DataFetchingEnvironment environment) {
-      return List.of();
-  };
+  @SneakyThrows
+  public List<Analysis> getInputAnalyses(DataFetchingEnvironment env) {
+    return inputAnalysesFetcher.get(env);
+  }
+
+  @SneakyThrows
+  public List<Analysis> getProducedAnalyses(DataFetchingEnvironment env) {
+    return producedAnalysesFetcher.get(env);
+  }
 }

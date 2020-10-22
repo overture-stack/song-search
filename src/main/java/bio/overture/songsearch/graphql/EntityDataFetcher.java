@@ -18,6 +18,10 @@
 
 package bio.overture.songsearch.graphql;
 
+import static bio.overture.songsearch.config.SearchFields.ANALYSIS_ID;
+import static bio.overture.songsearch.config.SearchFields.RUN_ID;
+import static bio.overture.songsearch.utils.CommonUtils.asImmutableMap;
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.stream.Collectors.toList;
 
 import bio.overture.songsearch.config.SongSearchProperties;
@@ -29,13 +33,12 @@ import com.apollographql.federation.graphqljava._Entity;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import graphql.schema.DataFetcher;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
-import graphql.schema.DataFetchingEnvironment;
+import lombok.*;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -82,10 +85,10 @@ public class EntityDataFetcher {
                     val ids = getRelevantAnalysisIdsFromRunParameters(values.get("parameters"));
 
                     if (runId instanceof String) {
-                      return new RunWithNestedFetch(
+                      return new Run(
                           (String) runId,
-                          analysisService.getAnalysesByRunId((String) runId),
-                          analysisService.getAnalysesById(ids));
+                          producedAnalysesResolver((String) runId),
+                          inputAnalysesResolver(ids));
                     }
                   }
                   return null;
@@ -93,17 +96,50 @@ public class EntityDataFetcher {
             .collect(toList());
   }
 
-  private List<String> getRelevantAnalysisIdsFromRunParameters(Object parametersObj) {
-    val parametersBuilder = ImmutableMap.<String, Object>builder();
-    if (parametersObj instanceof Map) {
-      try {
-        val parametersMap = (Map<String, Object>) parametersObj;
-        parametersBuilder.putAll(parametersMap);
-      } catch (ClassCastException e) {
-        log.error("Failed to cast parametersObj to Map<String, Object>");
+  private DataFetcher<List<Analysis>> inputAnalysesResolver(List<String> inputAnalysisIds) {
+    return environment -> {
+      ImmutableMap<String, Object> filter = asImmutableMap(environment.getArgument("filter"));
+      val filerAnalysisId = filter.get(ANALYSIS_ID);
+
+      val multipleFilters =
+          inputAnalysisIds.stream()
+              .map(
+                  id -> {
+                    Map<String, Object> map = new HashMap<>(filter);
+                    map.put(ANALYSIS_ID, id);
+                    return map;
+                  })
+              .filter(f -> filerAnalysisId == null || f.get(ANALYSIS_ID).equals(filerAnalysisId))
+              .collect(toList());
+
+      // short circuit here, otherwise will get all analysis
+      if (multipleFilters.size() < 1) {
+        return List.of();
       }
-    }
-    val parameters = parametersBuilder.build();
+
+      return analysisService.getAnalyses(multipleFilters);
+    };
+  }
+
+  private DataFetcher<List<Analysis>> producedAnalysesResolver(String runId) {
+    return environment -> {
+      ImmutableMap<String, Object> filter = asImmutableMap(environment.getArgument("filter"));
+      val filterRunId = filter.getOrDefault(RUN_ID, runId);
+
+      // short circuit here if can't find produced analysis for valid runId
+      if (isNullOrEmpty(runId) || !runId.equals(filterRunId)) {
+        return List.of();
+      }
+
+      Map<String, Object> map = new HashMap<>(filter);
+      map.put(RUN_ID, runId);
+
+      return analysisService.getAnalyses(map, null);
+    };
+  }
+
+  private List<String> getRelevantAnalysisIdsFromRunParameters(Object parametersObj) {
+    ImmutableMap<String, Object> parameters = asImmutableMap(parametersObj);
 
     ImmutableList<String> analysisIdKeysToLookFor =
         songSearchProperties.getWorkflowRunParameterKeys().getAnalysisId();
@@ -113,27 +149,5 @@ public class EntityDataFetcher {
         .filter(Objects::nonNull)
         .map(Objects::toString)
         .collect(toList());
-  }
-
-
-  class RunWithNestedFetch extends Run {
-    public RunWithNestedFetch(String runId, List<Analysis> producedAnalyses, List<Analysis> inputAnalyses) {
-      super(runId, producedAnalyses, inputAnalyses);
-    }
-
-    @Override
-    public List<Analysis> getInputAnalyses(DataFetchingEnvironment environment) {
-      // TODO include relevant analysis Id..
-      val args = environment.getArguments();
-
-      val filter = ImmutableMap.<String, Object>builder();
-      val page = ImmutableMap.<String, Integer>builder();
-
-      if (args != null) {
-        if (args.get("filter") != null) filter.putAll((Map<String, Object>) args.get("filter"));
-        if (args.get("page") != null) page.putAll((Map<String, Integer>) args.get("page"));
-      }
-      return analysisService.getAnalyses(filter.build(), page.build());
-    }
   }
 }

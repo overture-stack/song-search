@@ -101,7 +101,7 @@ public class EntityDataFetcher {
       ImmutableMap<String, Object> filter = asImmutableMap(environment.getArgument("filter"));
       val filerAnalysisId = filter.get(ANALYSIS_ID);
 
-      val multipleFilters =
+      val multipleMergedFilters =
           inputAnalysisIds.stream()
               .map(
                   id -> {
@@ -113,11 +113,11 @@ public class EntityDataFetcher {
               .collect(toList());
 
       // short circuit here, otherwise will get all analysis
-      if (multipleFilters.size() < 1) {
+      if (multipleMergedFilters.size() < 1) {
         return List.of();
       }
 
-      return analysisService.getAnalyses(multipleFilters);
+      return analysisService.getAnalyses(multipleMergedFilters);
     };
   }
 
@@ -126,15 +126,15 @@ public class EntityDataFetcher {
       ImmutableMap<String, Object> filter = asImmutableMap(environment.getArgument("filter"));
       val filterRunId = filter.getOrDefault(RUN_ID, runId);
 
-      // short circuit here if can't find produced analysis for valid runId
+      // short circuit here since can't find produced analysis for invalid runId
       if (isNullOrEmpty(runId) || !runId.equals(filterRunId)) {
         return List.of();
       }
 
-      Map<String, Object> map = new HashMap<>(filter);
-      map.put(RUN_ID, runId);
+      Map<String, Object> mergedFilter = new HashMap<>(filter);
+      mergedFilter.put(RUN_ID, runId);
 
-      return analysisService.getAnalyses(map, null);
+      return analysisService.getAnalyses(mergedFilter, null);
     };
   }
 

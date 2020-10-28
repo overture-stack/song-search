@@ -135,11 +135,13 @@ input Page {
     from: Int!
 }
 
+directive @fetch(from : String!) on FIELD_DEFINITION
+
 type Run @key(fields: "runId") @extends {
     runId: ID! @external
     parameters: JSON @external
-    producedAnalyses: [Analysis]
-    inputAnalyses: [Analysis] @requires(fields: "parameters")
+    producedAnalyses(filter: AnalysisFilter): [Analysis] @fetch(from: "producedAnalyses")
+    inputAnalyses(filter: AnalysisFilter): [Analysis] @requires(fields: "parameters") @fetch(from: "inputAnalyses")
 }
 
 type SampleMatchedAnalysisPair {

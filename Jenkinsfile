@@ -1,6 +1,6 @@
 def dockerRepo = "ghcr.io/icgc-argo/song-search"
 def gitHubRepo = "icgc-argo/song-search"
-def chartVersion = "1.1.0"
+def chartVersion = "1.2.0"
 def commit = "UNKNOWN"
 def version = "UNKNOWN"
 

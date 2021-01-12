@@ -45,7 +45,7 @@ public class SearchFields {
   public static final String MATCHED_NORMAL_SUBMITTER_SAMPLE_ID = "matchedNormalSubmitterSampleId";
   public static final String RUN_ID = "runId";
 
-  public static final Map<String, String> ANALYSIS_GQL_FIELD_TO_ES_FIELD =
+  public static final Map<String, String> ANALYSIS_QUERY_TO_ES_DOC_PATHS =
       ImmutableMap.copyOf(
           ofEntries(
               entry(ANALYSIS_ID, "analysis_id"),
@@ -53,31 +53,32 @@ public class SearchFields {
               entry(ANALYSIS_VERSION, "analysis_version"),
               entry(ANALYSIS_STATE, "analysis_state"),
               entry(STUDY_ID, "study_id"),
-              entry(RUN_ID, "run_id")));
+              entry(RUN_ID, "workflow.run_id")));
 
-  public static final Map<String, NestedField> ANALYSIS_GQL_FIELD_TO_ES_NESTED_FIELD =
+  public static final Map<String, NestedFieldPath> ANALYSIS_QUERY_TO_ES_NESTED_DOC_PATHS =
       ImmutableMap.copyOf(
           ofEntries(
-              entry(DONOR_ID, new NestedField("donors", "donors.donor_id")),
+              entry(DONOR_ID, new NestedFieldPath("donors", "donors.donor_id")),
               entry(
-                  SPECIMEN_ID, new NestedField("donors.specimens", "donors.specimens.specimen_id")),
+                  SPECIMEN_ID,
+                  new NestedFieldPath("donors.specimens", "donors.specimens.specimen_id")),
               entry(
                   SAMPLE_ID,
-                  new NestedField(
+                  new NestedFieldPath(
                       "donors.specimens.samples", "donors.specimens.samples.sample_id")),
               entry(
                   MATCHED_NORMAL_SUBMITTER_SAMPLE_ID,
-                  new NestedField(
+                  new NestedFieldPath(
                       "donors.specimens.samples",
                       "donors.specimens.samples.matched_normal_submitter_sample_id")),
               entry(
                   SUBMITTER_SAMPLE_ID,
-                  new NestedField(
+                  new NestedFieldPath(
                       "donors.specimens.samples",
                       "donors.specimens.samples.submitter_sample_id"))));
 
   @Value
-  public static class NestedField {
+  public static class NestedFieldPath {
     String objectPath;
     String fieldPath;
   }

@@ -54,8 +54,7 @@ public class ElasticsearchQueryUtils {
   }
 
   /**
-   * For each argument, find its query producer function and apply the argument value ANDing it in a
-   * bool query
+   * For each sorts, find its SortBuilder and add the sort order value then collect them all in a list
    *
    * @param sorts List of Sort objects
    * @return List of FiledSortBuilder

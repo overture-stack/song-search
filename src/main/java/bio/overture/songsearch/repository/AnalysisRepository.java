@@ -74,19 +74,19 @@ public class AnalysisRepository {
   private static Map<String, Function<String, AbstractQueryBuilder<?>>> argumentPathMap() {
     val immutableMap = ImmutableMap.<String, Function<String, AbstractQueryBuilder<?>>>builder();
 
-    ANALYSIS_GQL_FIELD_TO_ES_FIELD.forEach(
-        (k, v) -> {
-          immutableMap.put(k, value -> new TermQueryBuilder(v, value));
+    ANALYSIS_QUERY_TO_ES_DOC_PATHS.forEach(
+        (k, fieldPath) -> {
+          immutableMap.put(k, value -> new TermQueryBuilder(fieldPath, value));
         });
 
-    ANALYSIS_GQL_FIELD_TO_ES_NESTED_FIELD.forEach(
-        (k, v) -> {
+    ANALYSIS_QUERY_TO_ES_NESTED_DOC_PATHS.forEach(
+        (k, nestedFieldPath) -> {
           immutableMap.put(
               k,
               value ->
                   new NestedQueryBuilder(
-                      v.getObjectPath(),
-                      new TermQueryBuilder(v.getFieldPath(), value),
+                      nestedFieldPath.getObjectPath(),
+                      new TermQueryBuilder(nestedFieldPath.getFieldPath(), value),
                       ScoreMode.None));
         });
 
@@ -96,10 +96,10 @@ public class AnalysisRepository {
   private static Map<String, FieldSortBuilder> sortBuilderMap() {
     val immutableMap = ImmutableMap.<String, FieldSortBuilder>builder();
 
-    ANALYSIS_GQL_FIELD_TO_ES_FIELD.forEach(
+    ANALYSIS_QUERY_TO_ES_DOC_PATHS.forEach(
         (k, v) -> immutableMap.put(k, SortBuilders.fieldSort(v)));
 
-    ANALYSIS_GQL_FIELD_TO_ES_NESTED_FIELD.forEach(
+    ANALYSIS_QUERY_TO_ES_NESTED_DOC_PATHS.forEach(
         (k, v) -> {
           val sortBuilder =
               SortBuilders.fieldSort(v.getFieldPath())
@@ -151,7 +151,7 @@ public class AnalysisRepository {
     val searchSourceBuilder = new SearchSourceBuilder();
 
     if (sorts.isEmpty()) {
-      searchSourceBuilder.sort(ANALYSIS_GQL_FIELD_TO_ES_FIELD.get(ANALYSIS_ID), SortOrder.ASC);
+      searchSourceBuilder.sort(ANALYSIS_QUERY_TO_ES_DOC_PATHS.get(ANALYSIS_ID), SortOrder.ASC);
     } else {
       val sortBuilders = sortsToEsSortBuilders(SORT_BUILDER_RESOLVERS, sorts);
       sortBuilders.forEach(searchSourceBuilder::sort);

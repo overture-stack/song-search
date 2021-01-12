@@ -24,9 +24,7 @@ import static bio.overture.songsearch.model.enums.SpecimenType.TUMOUR;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toUnmodifiableList;
 
-import bio.overture.songsearch.model.Analysis;
-import bio.overture.songsearch.model.Sample;
-import bio.overture.songsearch.model.SampleMatchedAnalysisPair;
+import bio.overture.songsearch.model.*;
 import bio.overture.songsearch.repository.AnalysisRepository;
 import com.google.common.collect.ImmutableMap;
 import java.util.*;
@@ -56,6 +54,23 @@ public class AnalysisService {
     val response = analysisRepository.getAnalyses(filter, page);
     val hitStream = Arrays.stream(response.getHits().getHits());
     return hitStream.map(AnalysisService::hitToAnalysis).collect(toUnmodifiableList());
+  }
+
+  public ProbeResult<Analysis> probeAnalyses(
+      Map<String, Object> filter, Map<String, Integer> page, List<Sort> sorts) {
+    val response = analysisRepository.getAnalyses(filter, page, sorts);
+    val responseSearchHits = response.getHits();
+
+    val totalHits = responseSearchHits.getTotalHits().value;
+    val from = page.getOrDefault("from", 0);
+    val size = page.getOrDefault("size", 10);
+
+    val analyses =
+        Arrays.stream(responseSearchHits.getHits())
+            .map(AnalysisService::hitToAnalysis)
+            .collect(toUnmodifiableList());
+    val nextFrom = (totalHits - from) / size > 0;
+    return new ProbeResult<>(analyses, nextFrom, totalHits);
   }
 
   public Analysis getAnalysisById(String analysisId) {

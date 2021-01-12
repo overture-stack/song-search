@@ -20,9 +20,12 @@ package bio.overture.songsearch.repository;
 
 import static bio.overture.songsearch.config.SearchFields.*;
 import static bio.overture.songsearch.utils.ElasticsearchQueryUtils.queryFromArgs;
+import static bio.overture.songsearch.utils.ElasticsearchQueryUtils.sortsToEsSortBuilders;
+import static java.util.Collections.emptyList;
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 
 import bio.overture.songsearch.config.ElasticsearchProperties;
+import bio.overture.songsearch.model.Sort;
 import com.google.common.collect.ImmutableMap;
 import java.util.*;
 import java.util.function.Function;
@@ -42,6 +45,10 @@ import org.elasticsearch.index.query.AbstractQueryBuilder;
 import org.elasticsearch.index.query.NestedQueryBuilder;
 import org.elasticsearch.index.query.TermQueryBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.elasticsearch.search.sort.NestedSortBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
+import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -50,6 +57,8 @@ import org.springframework.stereotype.Component;
 public class AnalysisRepository {
   private static final Map<String, Function<String, AbstractQueryBuilder<?>>> QUERY_RESOLVER =
       argumentPathMap();
+
+  private static final Map<String, FieldSortBuilder> SORT_BUILDER_RESOLVERS = sortBuilderMap();
 
   private final RestHighLevelClient client;
   private final String analysisCentricIndex;
@@ -63,57 +72,56 @@ public class AnalysisRepository {
   }
 
   private static Map<String, Function<String, AbstractQueryBuilder<?>>> argumentPathMap() {
-    return ImmutableMap.<String, Function<String, AbstractQueryBuilder<?>>>builder()
-        .put(ANALYSIS_ID, value -> new TermQueryBuilder("analysis_id", value))
-        .put(ANALYSIS_TYPE, value -> new TermQueryBuilder("analysis_type", value))
-        .put(ANALYSIS_VERSION, value -> new TermQueryBuilder("analysis_version", value))
-        .put(ANALYSIS_STATE, value -> new TermQueryBuilder("analysis_state", value))
-        .put(STUDY_ID, value -> new TermQueryBuilder("study_id", value))
-        .put(RUN_ID, value -> new TermQueryBuilder("workflow.run_id", value))
-        .put(
-            DONOR_ID,
-            value ->
-                new NestedQueryBuilder(
-                    "donors", new TermQueryBuilder("donors.donor_id", value), ScoreMode.None))
-        .put(
-            SPECIMEN_ID,
-            value ->
-                new NestedQueryBuilder(
-                    "donors.specimens",
-                    new TermQueryBuilder("donors.specimens.specimen_id", value),
-                    ScoreMode.None))
-        .put(
-            SAMPLE_ID,
-            value ->
-                new NestedQueryBuilder(
-                    "donors.specimens.samples",
-                    new TermQueryBuilder("donors.specimens.samples.sample_id", value),
-                    ScoreMode.None))
-        .put(
-            MATCHED_NORMAL_SUBMITTER_SAMPLE_ID,
-            value ->
-                new NestedQueryBuilder(
-                    "donors.specimens.samples",
-                    new TermQueryBuilder(
-                        "donors.specimens.samples.matched_normal_submitter_sample_id", value),
-                    ScoreMode.None))
-        .put(
-            SUBMITTER_SAMPLE_ID,
-            value ->
-                new NestedQueryBuilder(
-                    "donors.specimens.samples",
-                    new TermQueryBuilder("donors.specimens.samples.submitter_sample_id", value),
-                    ScoreMode.None))
-        .build();
+    val immutableMap = ImmutableMap.<String, Function<String, AbstractQueryBuilder<?>>>builder();
+
+    ANALYSIS_GQL_FIELD_TO_ES_FIELD.forEach(
+        (k, v) -> {
+          immutableMap.put(k, value -> new TermQueryBuilder(v, value));
+        });
+
+    ANALYSIS_GQL_FIELD_TO_ES_NESTED_FIELD.forEach(
+        (k, v) -> {
+          immutableMap.put(
+              k,
+              value ->
+                  new NestedQueryBuilder(
+                      v.getObjectPath(),
+                      new TermQueryBuilder(v.getFieldPath(), value),
+                      ScoreMode.None));
+        });
+
+    return immutableMap.build();
+  }
+
+  private static Map<String, FieldSortBuilder> sortBuilderMap() {
+    val immutableMap = ImmutableMap.<String, FieldSortBuilder>builder();
+
+    ANALYSIS_GQL_FIELD_TO_ES_FIELD.forEach(
+        (k, v) -> immutableMap.put(k, SortBuilders.fieldSort(v)));
+
+    ANALYSIS_GQL_FIELD_TO_ES_NESTED_FIELD.forEach(
+        (k, v) -> {
+          val sortBuilder =
+              SortBuilders.fieldSort(v.getFieldPath())
+                  .setNestedSort(new NestedSortBuilder(v.getObjectPath()));
+          immutableMap.put(k, sortBuilder);
+        });
+
+    return immutableMap.build();
   }
 
   public SearchResponse getAnalyses(Map<String, Object> filter, Map<String, Integer> page) {
+    return getAnalyses(filter, page, emptyList());
+  }
+
+  public SearchResponse getAnalyses(
+      Map<String, Object> filter, Map<String, Integer> page, List<Sort> sort) {
     final AbstractQueryBuilder<?> query =
         (filter == null || filter.size() == 0)
             ? matchAllQuery()
             : queryFromArgs(QUERY_RESOLVER, filter);
 
-    val searchSourceBuilder = createSearchSourceBuilder(query, page);
+    val searchSourceBuilder = createSearchSourceBuilder(query, page, sort);
 
     return execute(searchSourceBuilder);
   }
@@ -135,7 +143,20 @@ public class AnalysisRepository {
 
   private SearchSourceBuilder createSearchSourceBuilder(
       AbstractQueryBuilder<?> query, Map<String, Integer> page) {
+    return createSearchSourceBuilder(query, page, emptyList());
+  }
+
+  private SearchSourceBuilder createSearchSourceBuilder(
+      AbstractQueryBuilder<?> query, Map<String, Integer> page, List<Sort> sorts) {
     val searchSourceBuilder = new SearchSourceBuilder();
+
+    if (sorts.isEmpty()) {
+      searchSourceBuilder.sort(ANALYSIS_GQL_FIELD_TO_ES_FIELD.get(ANALYSIS_ID), SortOrder.ASC);
+    } else {
+      val sortBuilders = sortsToEsSortBuilders(SORT_BUILDER_RESOLVERS, sorts);
+      sortBuilders.forEach(searchSourceBuilder::sort);
+    }
+
     searchSourceBuilder.query(query);
 
     if (page != null && page.size() != 0) {

@@ -18,9 +18,14 @@
 
 package bio.overture.songsearch.config;
 
+import static java.util.Map.entry;
+import static java.util.Map.ofEntries;
 import static lombok.AccessLevel.PRIVATE;
 
+import com.google.common.collect.ImmutableMap;
+import java.util.Map;
 import lombok.NoArgsConstructor;
+import lombok.Value;
 
 @NoArgsConstructor(access = PRIVATE)
 public class SearchFields {
@@ -39,4 +44,41 @@ public class SearchFields {
   public static final String SUBMITTER_SAMPLE_ID = "submitterSampleId";
   public static final String MATCHED_NORMAL_SUBMITTER_SAMPLE_ID = "matchedNormalSubmitterSampleId";
   public static final String RUN_ID = "runId";
+
+  public static final Map<String, String> ANALYSIS_GQL_FIELD_TO_ES_FIELD =
+      ImmutableMap.copyOf(
+          ofEntries(
+              entry(ANALYSIS_ID, "analysis_id"),
+              entry(ANALYSIS_TYPE, "analysis_type"),
+              entry(ANALYSIS_VERSION, "analysis_version"),
+              entry(ANALYSIS_STATE, "analysis_state"),
+              entry(STUDY_ID, "study_id"),
+              entry(RUN_ID, "run_id")));
+
+  public static final Map<String, NestedField> ANALYSIS_GQL_FIELD_TO_ES_NESTED_FIELD =
+      ImmutableMap.copyOf(
+          ofEntries(
+              entry(DONOR_ID, new NestedField("donors", "donors.donor_id")),
+              entry(
+                  SPECIMEN_ID, new NestedField("donors.specimens", "donors.specimens.specimen_id")),
+              entry(
+                  SAMPLE_ID,
+                  new NestedField(
+                      "donors.specimens.samples", "donors.specimens.samples.sample_id")),
+              entry(
+                  MATCHED_NORMAL_SUBMITTER_SAMPLE_ID,
+                  new NestedField(
+                      "donors.specimens.samples",
+                      "donors.specimens.samples.matched_normal_submitter_sample_id")),
+              entry(
+                  SUBMITTER_SAMPLE_ID,
+                  new NestedField(
+                      "donors.specimens.samples",
+                      "donors.specimens.samples.submitter_sample_id"))));
+
+  @Value
+  public static class NestedField {
+    String objectPath;
+    String fieldPath;
+  }
 }

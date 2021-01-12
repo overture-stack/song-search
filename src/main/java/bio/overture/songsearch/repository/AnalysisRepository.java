@@ -115,13 +115,13 @@ public class AnalysisRepository {
   }
 
   public SearchResponse getAnalyses(
-      Map<String, Object> filter, Map<String, Integer> page, List<Sort> sort) {
+      Map<String, Object> filter, Map<String, Integer> page, List<Sort> sorts) {
     final AbstractQueryBuilder<?> query =
         (filter == null || filter.size() == 0)
             ? matchAllQuery()
             : queryFromArgs(QUERY_RESOLVER, filter);
 
-    val searchSourceBuilder = createSearchSourceBuilder(query, page, sort);
+    val searchSourceBuilder = createSearchSourceBuilder(query, page, sorts);
 
     return execute(searchSourceBuilder);
   }

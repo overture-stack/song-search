@@ -66,7 +66,7 @@ public class FileDataFetcher {
                           .collect(toUnmodifiableList()));
         }
       }
-      return fileService.searchAnalyses(filter.build(), page.build(), sorts.build());
+      return fileService.searchFiles(filter.build(), page.build(), sorts.build());
     };
   }
 

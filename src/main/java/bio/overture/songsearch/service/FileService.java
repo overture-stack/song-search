@@ -47,7 +47,7 @@ public class FileService {
     return File.parse(sourceMap);
   }
 
-  public SearchResult<File> searchAnalyses(
+  public SearchResult<File> searchFiles(
           Map<String, Object> filter, Map<String, Integer> page, List<Sort> sorts) {
     val response = fileRepository.getFiles(filter, page, sorts);
     val responseSearchHits = response.getHits();

@@ -18,8 +18,12 @@
 
 package bio.overture.songsearch.graphql;
 
+import bio.overture.songsearch.model.AggregationResult;
 import bio.overture.songsearch.model.File;
+import bio.overture.songsearch.model.SearchResult;
+import bio.overture.songsearch.model.Sort;
 import bio.overture.songsearch.service.FileService;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import graphql.schema.DataFetcher;
 import java.util.List;
@@ -28,6 +32,9 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import static bio.overture.songsearch.utils.JacksonUtils.convertValue;
+import static java.util.stream.Collectors.toUnmodifiableList;
 
 @Slf4j
 @Component
@@ -40,18 +47,41 @@ public class FileDataFetcher {
   }
 
   @SuppressWarnings("unchecked")
-  public DataFetcher<List<File>> getFilesDataFetcher() {
+  public DataFetcher<SearchResult<File>> getFilesDataFetcher() {
     return environment -> {
       val args = environment.getArguments();
 
       val filter = ImmutableMap.<String, Object>builder();
       val page = ImmutableMap.<String, Integer>builder();
+      val sorts = ImmutableList.<Sort>builder();
 
       if (args != null) {
         if (args.get("filter") != null) filter.putAll((Map<String, Object>) args.get("filter"));
         if (args.get("page") != null) page.putAll((Map<String, Integer>) args.get("page"));
+        if (args.get("sorts") != null) {
+          val rawSorts = (List<Object>) args.get("sorts");
+          sorts.addAll(
+                  rawSorts.stream()
+                          .map(sort -> convertValue(sort, Sort.class))
+                          .collect(toUnmodifiableList()));
+        }
       }
-      return fileService.getFiles(filter.build(), page.build());
+      return fileService.searchAnalyses(filter.build(), page.build(), sorts.build());
     };
   }
+
+  @SuppressWarnings("unchecked")
+  public DataFetcher<AggregationResult> getAggregateFilesDataFetcher() {
+    return environment -> {
+      val args = environment.getArguments();
+
+      val filter = ImmutableMap.<String, Object>builder();
+
+      if (args != null) {
+        if (args.get("filter") != null) filter.putAll((Map<String, Object>) args.get("filter"));
+      }
+      return fileService.aggregateFiles(filter.build());
+    };
+  }
+
 }

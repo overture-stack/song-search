@@ -25,7 +25,6 @@ import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 import static org.elasticsearch.search.sort.SortOrder.ASC;
 
 import bio.overture.songsearch.config.ElasticsearchProperties;
-import bio.overture.songsearch.model.NestedFieldPath;
 import bio.overture.songsearch.model.Sort;
 import com.google.common.collect.ImmutableMap;
 import java.util.*;
@@ -35,6 +34,7 @@ import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.search.MultiSearchRequest;
 import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchRequest;
@@ -42,53 +42,21 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.AbstractQueryBuilder;
+import org.elasticsearch.index.query.NestedQueryBuilder;
+import org.elasticsearch.index.query.TermQueryBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
 public class AnalysisRepository {
-  private static final Map<String, String> ANALYSIS_FIELD_TO_ES_DOC_PATHS =
-      ImmutableMap.copyOf(
-          Map.of(
-              ANALYSIS_ID, "analysis_id",
-              ANALYSIS_TYPE, "analysis_type",
-              ANALYSIS_VERSION, "analysis_version",
-              ANALYSIS_STATE, "analysis_state",
-              STUDY_ID, "study_id",
-              RUN_ID, "workflow.run_id"));
-
-  private static final Map<String, NestedFieldPath> ANALYSIS_FIELD_TO_NESTED_ES_DOC_PATHS =
-      ImmutableMap.of(
-          DONOR_ID,
-          new NestedFieldPath("donors", "donors.donor_id"),
-          SPECIMEN_ID,
-          new NestedFieldPath("donors.specimens", "donors.specimens.specimen_id"),
-          SAMPLE_ID,
-          new NestedFieldPath("donors.specimens.samples", "donors.specimens.samples.sample_id"),
-          MATCHED_NORMAL_SUBMITTER_SAMPLE_ID,
-          new NestedFieldPath(
-              "donors.specimens.samples",
-              "donors.specimens.samples.matched_normal_submitter_sample_id"),
-          SUBMITTER_SAMPLE_ID,
-          new NestedFieldPath(
-              "donors.specimens.samples", "donors.specimens.samples.submitter_sample_id"));
-
-  private static final Map<String, String> ANALYSIS_SORT_TO_ES_DOC_PATHS =
-      ImmutableMap.of(
-          ANALYSIS_ID, "analysis_id",
-          ANALYSIS_STATE, "analysis_state",
-          PUBLISHED_AT, "published_at",
-          UPDATED_AT, "updated_at",
-          FIRST_PUBLISHED_AT, "first_published_at");
-
   private static final Map<String, Function<String, AbstractQueryBuilder<?>>> QUERY_RESOLVER =
-      createQueryResolver(ANALYSIS_FIELD_TO_ES_DOC_PATHS, ANALYSIS_FIELD_TO_NESTED_ES_DOC_PATHS);
+      argumentPathMap();
 
-  private static final Map<String, FieldSortBuilder> SORT_BUILDER_RESOLVER =
-      createFieldSortBuilderResolver(ANALYSIS_SORT_TO_ES_DOC_PATHS, Map.of());
+  private static final Map<String, FieldSortBuilder> SORT_BUILDER_RESOLVER = sortPathMap();
 
   private final RestHighLevelClient client;
   private final String analysisCentricIndex;
@@ -99,6 +67,60 @@ public class AnalysisRepository {
       @NonNull ElasticsearchProperties elasticSearchProperties) {
     this.client = client;
     this.analysisCentricIndex = elasticSearchProperties.getAnalysisCentricIndex();
+  }
+
+  private static Map<String, Function<String, AbstractQueryBuilder<?>>> argumentPathMap() {
+    return ImmutableMap.<String, Function<String, AbstractQueryBuilder<?>>>builder()
+        .put(ANALYSIS_ID, value -> new TermQueryBuilder("analysis_id", value))
+        .put(ANALYSIS_TYPE, value -> new TermQueryBuilder("analysis_type", value))
+        .put(ANALYSIS_VERSION, value -> new TermQueryBuilder("analysis_version", value))
+        .put(ANALYSIS_STATE, value -> new TermQueryBuilder("analysis_state", value))
+        .put(STUDY_ID, value -> new TermQueryBuilder("study_id", value))
+        .put(RUN_ID, value -> new TermQueryBuilder("workflow.run_id", value))
+        .put(
+            DONOR_ID,
+            value ->
+                new NestedQueryBuilder(
+                    "donors", new TermQueryBuilder("donors.donor_id", value), ScoreMode.None))
+        .put(
+            SPECIMEN_ID,
+            value ->
+                new NestedQueryBuilder(
+                    "donors.specimens",
+                    new TermQueryBuilder("donors.specimens.specimen_id", value),
+                    ScoreMode.None))
+        .put(
+            SAMPLE_ID,
+            value ->
+                new NestedQueryBuilder(
+                    "donors.specimens.samples",
+                    new TermQueryBuilder("donors.specimens.samples.sample_id", value),
+                    ScoreMode.None))
+        .put(
+            MATCHED_NORMAL_SUBMITTER_SAMPLE_ID,
+            value ->
+                new NestedQueryBuilder(
+                    "donors.specimens.samples",
+                    new TermQueryBuilder(
+                        "donors.specimens.samples.matched_normal_submitter_sample_id", value),
+                    ScoreMode.None))
+        .put(
+            SUBMITTER_SAMPLE_ID,
+            value ->
+                new NestedQueryBuilder(
+                    "donors.specimens.samples",
+                    new TermQueryBuilder("donors.specimens.samples.submitter_sample_id", value),
+                    ScoreMode.None))
+        .build();
+  }
+
+  private static Map<String, FieldSortBuilder> sortPathMap() {
+    return ImmutableMap.<String, FieldSortBuilder>builder()
+        .put(ANALYSIS_STATE, SortBuilders.fieldSort("analysis_state"))
+        .put(PUBLISHED_AT, SortBuilders.fieldSort("published_at"))
+        .put(UPDATED_AT, SortBuilders.fieldSort("updated_at"))
+        .put(FIRST_PUBLISHED_AT, SortBuilders.fieldSort("first_published_at"))
+        .build();
   }
 
   public SearchResponse getAnalyses(Map<String, Object> filter, Map<String, Integer> page) {

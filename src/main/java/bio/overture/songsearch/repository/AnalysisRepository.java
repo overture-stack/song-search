@@ -116,6 +116,7 @@ public class AnalysisRepository {
 
   private static Map<String, FieldSortBuilder> sortPathMap() {
     return ImmutableMap.<String, FieldSortBuilder>builder()
+        .put(ANALYSIS_ID, SortBuilders.fieldSort("analysis_id"))
         .put(ANALYSIS_STATE, SortBuilders.fieldSort("analysis_state"))
         .put(PUBLISHED_AT, SortBuilders.fieldSort("published_at"))
         .put(UPDATED_AT, SortBuilders.fieldSort("updated_at"))

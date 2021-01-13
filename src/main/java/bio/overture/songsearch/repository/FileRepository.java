@@ -27,7 +27,6 @@ import static org.elasticsearch.search.sort.SortOrder.ASC;
 import bio.overture.songsearch.config.ElasticsearchProperties;
 import bio.overture.songsearch.model.Sort;
 import com.google.common.collect.ImmutableMap;
-
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -86,18 +85,19 @@ public class FileRepository {
 
   private static Map<String, FieldSortBuilder> sortPathMap() {
     return ImmutableMap.<String, FieldSortBuilder>builder()
-                   .put(FILE_OBJECT_ID, SortBuilders.fieldSort("object_id"))
-                   .put(FILE_ACCESS, SortBuilders.fieldSort("file_access"))
-                   .put(FILE_DATA_TYPE, SortBuilders.fieldSort("data_type"))
-                   .put(FILE_NAME, SortBuilders.fieldSort("file.name"))
-                   .build();
+        .put(FILE_OBJECT_ID, SortBuilders.fieldSort("object_id"))
+        .put(FILE_ACCESS, SortBuilders.fieldSort("file_access"))
+        .put(FILE_DATA_TYPE, SortBuilders.fieldSort("data_type"))
+        .put(FILE_NAME, SortBuilders.fieldSort("file.name"))
+        .build();
   }
 
   public SearchResponse getFiles(Map<String, Object> filter, Map<String, Integer> page) {
     return getFiles(filter, page, List.of());
   }
 
-  public SearchResponse getFiles(Map<String, Object> filter, Map<String, Integer> page, List<Sort> sorts) {
+  public SearchResponse getFiles(
+      Map<String, Object> filter, Map<String, Integer> page, List<Sort> sorts) {
     final AbstractQueryBuilder<?> query =
         (filter == null || filter.size() == 0)
             ? matchAllQuery()

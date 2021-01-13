@@ -18,6 +18,9 @@
 
 package bio.overture.songsearch.graphql;
 
+import static bio.overture.songsearch.utils.JacksonUtils.convertValue;
+import static java.util.stream.Collectors.toUnmodifiableList;
+
 import bio.overture.songsearch.model.AggregationResult;
 import bio.overture.songsearch.model.File;
 import bio.overture.songsearch.model.SearchResult;
@@ -32,9 +35,6 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import static bio.overture.songsearch.utils.JacksonUtils.convertValue;
-import static java.util.stream.Collectors.toUnmodifiableList;
 
 @Slf4j
 @Component
@@ -61,9 +61,9 @@ public class FileDataFetcher {
         if (args.get("sorts") != null) {
           val rawSorts = (List<Object>) args.get("sorts");
           sorts.addAll(
-                  rawSorts.stream()
-                          .map(sort -> convertValue(sort, Sort.class))
-                          .collect(toUnmodifiableList()));
+              rawSorts.stream()
+                  .map(sort -> convertValue(sort, Sort.class))
+                  .collect(toUnmodifiableList()));
         }
       }
       return fileService.searchFiles(filter.build(), page.build(), sorts.build());
@@ -83,5 +83,4 @@ public class FileDataFetcher {
       return fileService.aggregateFiles(filter.build());
     };
   }
-
 }

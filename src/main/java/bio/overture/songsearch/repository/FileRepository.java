@@ -20,10 +20,14 @@ package bio.overture.songsearch.repository;
 
 import static bio.overture.songsearch.config.constants.SearchFields.*;
 import static bio.overture.songsearch.utils.ElasticsearchQueryUtils.queryFromArgs;
+import static bio.overture.songsearch.utils.ElasticsearchQueryUtils.sortsToEsSortBuilders;
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
+import static org.elasticsearch.search.sort.SortOrder.ASC;
 
 import bio.overture.songsearch.config.ElasticsearchProperties;
+import bio.overture.songsearch.model.Sort;
 import com.google.common.collect.ImmutableMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import lombok.NonNull;
@@ -39,6 +43,8 @@ import org.elasticsearch.index.query.AbstractQueryBuilder;
 import org.elasticsearch.index.query.NestedQueryBuilder;
 import org.elasticsearch.index.query.TermQueryBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -47,6 +53,8 @@ import org.springframework.stereotype.Component;
 public class FileRepository {
   private static final Map<String, Function<String, AbstractQueryBuilder<?>>> QUERY_RESOLVER =
       argumentPathMap();
+
+  private static final Map<String, FieldSortBuilder> SORT_BUILDER_RESOLVER = sortPathMap();
 
   private final RestHighLevelClient client;
   private final String fileCentricIndex;
@@ -75,13 +83,35 @@ public class FileRepository {
         .build();
   }
 
+  private static Map<String, FieldSortBuilder> sortPathMap() {
+    return ImmutableMap.<String, FieldSortBuilder>builder()
+        .put(FILE_OBJECT_ID, SortBuilders.fieldSort("object_id"))
+        .put(FILE_ACCESS, SortBuilders.fieldSort("file_access"))
+        .put(FILE_DATA_TYPE, SortBuilders.fieldSort("data_type"))
+        .put(FILE_NAME, SortBuilders.fieldSort("file.name"))
+        .build();
+  }
+
   public SearchResponse getFiles(Map<String, Object> filter, Map<String, Integer> page) {
+    return getFiles(filter, page, List.of());
+  }
+
+  public SearchResponse getFiles(
+      Map<String, Object> filter, Map<String, Integer> page, List<Sort> sorts) {
     final AbstractQueryBuilder<?> query =
         (filter == null || filter.size() == 0)
             ? matchAllQuery()
             : queryFromArgs(QUERY_RESOLVER, filter);
 
     val searchSourceBuilder = new SearchSourceBuilder();
+
+    if (sorts.isEmpty()) {
+      searchSourceBuilder.sort(SORT_BUILDER_RESOLVER.get(FILE_OBJECT_ID).order(ASC));
+    } else {
+      val sortBuilders = sortsToEsSortBuilders(SORT_BUILDER_RESOLVER, sorts);
+      sortBuilders.forEach(searchSourceBuilder::sort);
+    }
+
     searchSourceBuilder.query(query);
 
     if (page != null && page.size() != 0) {

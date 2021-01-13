@@ -18,18 +18,21 @@
 
 package bio.overture.songsearch.utils;
 
+import static bio.overture.songsearch.config.SearchFields.*;
 import static java.util.stream.Collectors.toUnmodifiableList;
 
+import bio.overture.songsearch.model.NestedFieldPath;
 import bio.overture.songsearch.model.Sort;
+import com.google.common.collect.ImmutableMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import lombok.val;
-import org.elasticsearch.index.query.AbstractQueryBuilder;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.TermQueryBuilder;
+import org.apache.lucene.search.join.ScoreMode;
+import org.elasticsearch.index.query.*;
 import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.elasticsearch.search.sort.NestedSortBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 
 public class ElasticsearchQueryUtils {
@@ -54,7 +57,8 @@ public class ElasticsearchQueryUtils {
   }
 
   /**
-   * For each sorts, find its SortBuilder and add the sort order value then collect them all in a list
+   * For each sorts, find its SortBuilder and add the sort order value then collect them all in a
+   * list
    *
    * @param sorts List of Sort objects
    * @return List of FiledSortBuilder
@@ -68,6 +72,44 @@ public class ElasticsearchQueryUtils {
               return sortBuilder.order(SortOrder.fromString(sort.getOrder()));
             })
         .collect(toUnmodifiableList());
+  }
+
+  public static Map<String, Function<String, AbstractQueryBuilder<?>>> createQueryResolver(
+      Map<String, String> queryToEsDocPaths, Map<String, NestedFieldPath> queryToNestedEsDocPaths) {
+    val immutableMap = ImmutableMap.<String, Function<String, AbstractQueryBuilder<?>>>builder();
+
+    queryToEsDocPaths.forEach(
+        (k, fieldPath) -> immutableMap.put(k, value -> new TermQueryBuilder(fieldPath, value)));
+
+    queryToNestedEsDocPaths.forEach(
+        (k, nestedFieldPath) ->
+            immutableMap.put(
+                k,
+                value ->
+                    new NestedQueryBuilder(
+                        nestedFieldPath.getObjectPath(),
+                        new TermQueryBuilder(nestedFieldPath.getFieldPath(), value),
+                        ScoreMode.None)));
+
+    return immutableMap.build();
+  }
+
+  public static Map<String, FieldSortBuilder> createFieldSortBuilderResolver(
+      Map<String, String> sortFieldToEsDocPaths,
+      Map<String, NestedFieldPath> sortFieldToNestedEsDocPaths) {
+    val immutableMap = ImmutableMap.<String, FieldSortBuilder>builder();
+
+    sortFieldToEsDocPaths.forEach((k, v) -> immutableMap.put(k, SortBuilders.fieldSort(v)));
+
+    sortFieldToNestedEsDocPaths.forEach(
+        (k, v) -> {
+          val sortBuilder =
+              SortBuilders.fieldSort(v.getFieldPath())
+                  .setNestedSort(new NestedSortBuilder(v.getObjectPath()));
+          immutableMap.put(k, sortBuilder);
+        });
+
+    return immutableMap.build();
   }
 
   private static Function<String, AbstractQueryBuilder<?>> simpleTermQueryBuilderResolver(

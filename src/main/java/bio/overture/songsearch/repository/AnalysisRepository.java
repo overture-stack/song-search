@@ -19,12 +19,13 @@
 package bio.overture.songsearch.repository;
 
 import static bio.overture.songsearch.config.SearchFields.*;
-import static bio.overture.songsearch.utils.ElasticsearchQueryUtils.queryFromArgs;
-import static bio.overture.songsearch.utils.ElasticsearchQueryUtils.sortsToEsSortBuilders;
+import static bio.overture.songsearch.utils.ElasticsearchQueryUtils.*;
 import static java.util.Collections.emptyList;
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
+import static org.elasticsearch.search.sort.SortOrder.ASC;
 
 import bio.overture.songsearch.config.ElasticsearchProperties;
+import bio.overture.songsearch.model.NestedFieldPath;
 import bio.overture.songsearch.model.Sort;
 import com.google.common.collect.ImmutableMap;
 import java.util.*;
@@ -34,7 +35,6 @@ import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.search.MultiSearchRequest;
 import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchRequest;
@@ -42,23 +42,51 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.AbstractQueryBuilder;
-import org.elasticsearch.index.query.NestedQueryBuilder;
-import org.elasticsearch.index.query.TermQueryBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
-import org.elasticsearch.search.sort.NestedSortBuilder;
-import org.elasticsearch.search.sort.SortBuilders;
-import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
 public class AnalysisRepository {
-  private static final Map<String, Function<String, AbstractQueryBuilder<?>>> QUERY_RESOLVER =
-      argumentPathMap();
+  private static final Map<String, String> ANALYSIS_QUERY_TO_ES_DOC_PATHS =
+      ImmutableMap.copyOf(
+          Map.of(
+              ANALYSIS_ID, "analysis_id",
+              ANALYSIS_TYPE, "analysis_type",
+              ANALYSIS_VERSION,"analysis_version",
+              ANALYSIS_STATE,"analysis_state",
+              STUDY_ID,"study_id",
+              RUN_ID,"workflow.run_id"));
 
-  private static final Map<String, FieldSortBuilder> SORT_BUILDER_RESOLVERS = sortBuilderMap();
+  private static final Map<String, NestedFieldPath> ANALYSIS_QUERY_TO_NESTED_ES_DOC_PATHS =
+      ImmutableMap.of(
+          DONOR_ID, new NestedFieldPath("donors", "donors.donor_id"),
+          SPECIMEN_ID, new NestedFieldPath("donors.specimens", "donors.specimens.specimen_id"),
+          SAMPLE_ID,
+          new NestedFieldPath("donors.specimens.samples", "donors.specimens.samples.sample_id"),
+          MATCHED_NORMAL_SUBMITTER_SAMPLE_ID,
+          new NestedFieldPath(
+          "donors.specimens.samples",
+          "donors.specimens.samples.matched_normal_submitter_sample_id"),
+          SUBMITTER_SAMPLE_ID,
+          new NestedFieldPath(
+              "donors.specimens.samples", "donors.specimens.samples.submitter_sample_id"));
+
+  private static final Map<String, String> ANALYSIS_SORT_TO_ES_DOC_PATHS =
+      ImmutableMap.of(
+          ANALYSIS_ID, "analysis_id",
+          ANALYSIS_STATE, "analysis_state",
+          PUBLISHED_AT, "published_at",
+          UPDATED_AT, "updated_at",
+          FIRST_PUBLISHED_AT, "first_published_at");
+
+  private static final Map<String, Function<String, AbstractQueryBuilder<?>>> QUERY_RESOLVER =
+      createQueryResolver(ANALYSIS_QUERY_TO_ES_DOC_PATHS, ANALYSIS_QUERY_TO_NESTED_ES_DOC_PATHS);
+
+  private static final Map<String, FieldSortBuilder> SORT_BUILDER_RESOLVER =
+      createFieldSortBuilderResolver(ANALYSIS_SORT_TO_ES_DOC_PATHS, Map.of());
 
   private final RestHighLevelClient client;
   private final String analysisCentricIndex;
@@ -69,45 +97,6 @@ public class AnalysisRepository {
       @NonNull ElasticsearchProperties elasticSearchProperties) {
     this.client = client;
     this.analysisCentricIndex = elasticSearchProperties.getAnalysisCentricIndex();
-  }
-
-  private static Map<String, Function<String, AbstractQueryBuilder<?>>> argumentPathMap() {
-    val immutableMap = ImmutableMap.<String, Function<String, AbstractQueryBuilder<?>>>builder();
-
-    ANALYSIS_QUERY_TO_ES_DOC_PATHS.forEach(
-        (k, fieldPath) -> {
-          immutableMap.put(k, value -> new TermQueryBuilder(fieldPath, value));
-        });
-
-    ANALYSIS_QUERY_TO_ES_NESTED_DOC_PATHS.forEach(
-        (k, nestedFieldPath) -> {
-          immutableMap.put(
-              k,
-              value ->
-                  new NestedQueryBuilder(
-                      nestedFieldPath.getObjectPath(),
-                      new TermQueryBuilder(nestedFieldPath.getFieldPath(), value),
-                      ScoreMode.None));
-        });
-
-    return immutableMap.build();
-  }
-
-  private static Map<String, FieldSortBuilder> sortBuilderMap() {
-    val immutableMap = ImmutableMap.<String, FieldSortBuilder>builder();
-
-    ANALYSIS_QUERY_TO_ES_DOC_PATHS.forEach(
-        (k, v) -> immutableMap.put(k, SortBuilders.fieldSort(v)));
-
-    ANALYSIS_QUERY_TO_ES_NESTED_DOC_PATHS.forEach(
-        (k, v) -> {
-          val sortBuilder =
-              SortBuilders.fieldSort(v.getFieldPath())
-                  .setNestedSort(new NestedSortBuilder(v.getObjectPath()));
-          immutableMap.put(k, sortBuilder);
-        });
-
-    return immutableMap.build();
   }
 
   public SearchResponse getAnalyses(Map<String, Object> filter, Map<String, Integer> page) {
@@ -151,9 +140,9 @@ public class AnalysisRepository {
     val searchSourceBuilder = new SearchSourceBuilder();
 
     if (sorts.isEmpty()) {
-      searchSourceBuilder.sort(ANALYSIS_QUERY_TO_ES_DOC_PATHS.get(ANALYSIS_ID), SortOrder.ASC);
+      searchSourceBuilder.sort(SORT_BUILDER_RESOLVER.get(ANALYSIS_ID).order(ASC));
     } else {
-      val sortBuilders = sortsToEsSortBuilders(SORT_BUILDER_RESOLVERS, sorts);
+      val sortBuilders = sortsToEsSortBuilders(SORT_BUILDER_RESOLVER, sorts);
       sortBuilders.forEach(searchSourceBuilder::sort);
     }
 

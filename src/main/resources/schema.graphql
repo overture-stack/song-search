@@ -12,6 +12,9 @@ type Analysis @key(fields: "analysisId") {
     analysisType: String
     analysisVersion: Int
     analysisState: AnalysisState
+    publishedAt: String
+    updatedAt: String
+    firstPublishedAt: String
     studyId: String
     donors: [Donor]
     files: [AnalysisFile]
@@ -151,14 +154,10 @@ type SampleMatchedAnalysisPair {
 
 enum AnalysisSortField {
     analysisId,
-    analysisType,
-    analysisVersion,
     analysisState,
-    studyId,
-    donorId,
-    specimenId,
-    sampleId,
-    runId
+    publishedAt,
+    updatedAt,
+    firstPublishedAt
 }
 
 enum SortOrder {
@@ -171,20 +170,24 @@ input AnalysisSort {
     order: SortOrder!
 }
 
-type ProbeResultInfo {
-    contentCount: String
+type SearchResultInfo {
+    contentCount: String!
     hasNextFrom: String!
     totalHits: String!
 }
 
-type AnalysesProbeResult {
+type AnalysesSearchResult {
     content: [Analysis!]
-    info: ProbeResultInfo!
+    info: SearchResultInfo!
+}
+
+type AggregationResult {
+    totalHits: String!
 }
 
 extend type Query {
-    analyses(filter: AnalysisFilter, page: Page): [Analysis]
+    analyses(filter: AnalysisFilter, page: Page, sorts: [AnalysisSort!]): AnalysesSearchResult!
+    aggregateAnalyses(filter: AnalysisFilter): AggregationResult!
     files(filter: FileFilter, page: Page): [File]
     sampleMatchedAnalysisPairs(analysisId: String!): [SampleMatchedAnalysisPair]
-    probeAnalyses(filter: AnalysisFilter, page: Page, sorts: [AnalysisSort!]): AnalysesProbeResult
 }

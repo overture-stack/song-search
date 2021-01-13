@@ -21,10 +21,7 @@ package bio.overture.songsearch.graphql;
 import static bio.overture.songsearch.utils.JacksonUtils.convertValue;
 import static java.util.stream.Collectors.toUnmodifiableList;
 
-import bio.overture.songsearch.model.Analysis;
-import bio.overture.songsearch.model.ProbeResult;
-import bio.overture.songsearch.model.SampleMatchedAnalysisPair;
-import bio.overture.songsearch.model.Sort;
+import bio.overture.songsearch.model.*;
 import bio.overture.songsearch.service.AnalysisService;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -48,22 +45,7 @@ public class AnalysisDataFetcher {
   }
 
   @SuppressWarnings("unchecked")
-  public DataFetcher<List<Analysis>> getAnalysesDataFetcher() {
-    return environment -> {
-      val args = environment.getArguments();
-
-      val filter = ImmutableMap.<String, Object>builder();
-      val page = ImmutableMap.<String, Integer>builder();
-
-      if (args != null) {
-        if (args.get("filter") != null) filter.putAll((Map<String, Object>) args.get("filter"));
-        if (args.get("page") != null) page.putAll((Map<String, Integer>) args.get("page"));
-      }
-      return analysisService.getAnalyses(filter.build(), page.build());
-    };
-  }
-
-  public DataFetcher<ProbeResult<Analysis>> getProbeAnalysesDataFetcher() {
+  public DataFetcher<SearchResult<Analysis>> getAnalysesDataFetcher() {
     return environment -> {
       val args = environment.getArguments();
 
@@ -82,7 +64,21 @@ public class AnalysisDataFetcher {
                   .collect(toUnmodifiableList()));
         }
       }
-      return analysisService.probeAnalyses(filter.build(), page.build(), sorts.build());
+      return analysisService.searchAnalyses(filter.build(), page.build(), sorts.build());
+    };
+  }
+
+  @SuppressWarnings("unchecked")
+  public DataFetcher<AggregationResult> getAggregateAnalysesDataFetcher() {
+    return environment -> {
+      val args = environment.getArguments();
+
+      val filter = ImmutableMap.<String, Object>builder();
+
+      if (args != null) {
+        if (args.get("filter") != null) filter.putAll((Map<String, Object>) args.get("filter"));
+      }
+      return analysisService.aggregateAnalyses(filter.build());
     };
   }
 

@@ -55,6 +55,12 @@ public class Analysis {
 
   private Workflow workflow;
 
+  private String updatedAt;
+
+  private String publishedAt;
+
+  private String firstPublishedAt;
+
   @SneakyThrows
   public static Analysis parse(@NonNull Map<String, Object> sourceMap) {
     return MAPPER.convertValue(sourceMap, Analysis.class);

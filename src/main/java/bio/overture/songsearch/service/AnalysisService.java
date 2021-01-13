@@ -50,13 +50,7 @@ public class AnalysisService {
     return Analysis.parse(sourceMap);
   }
 
-  public List<Analysis> getAnalyses(Map<String, Object> filter, Map<String, Integer> page) {
-    val response = analysisRepository.getAnalyses(filter, page);
-    val hitStream = Arrays.stream(response.getHits().getHits());
-    return hitStream.map(AnalysisService::hitToAnalysis).collect(toUnmodifiableList());
-  }
-
-  public ProbeResult<Analysis> probeAnalyses(
+  public SearchResult<Analysis> searchAnalyses(
       Map<String, Object> filter, Map<String, Integer> page, List<Sort> sorts) {
     val response = analysisRepository.getAnalyses(filter, page, sorts);
     val responseSearchHits = response.getHits();
@@ -70,7 +64,20 @@ public class AnalysisService {
             .map(AnalysisService::hitToAnalysis)
             .collect(toUnmodifiableList());
     val nextFrom = (totalHits - from) / size > 0;
-    return new ProbeResult<>(analyses, nextFrom, totalHits);
+    return new SearchResult<>(analyses, nextFrom, totalHits);
+  }
+
+  public AggregationResult aggregateAnalyses(Map<String, Object> filter) {
+    val response = analysisRepository.getAnalyses(filter, Map.of(), List.of());
+    val responseSearchHits = response.getHits();
+    val totalHits = responseSearchHits.getTotalHits().value;
+    return new AggregationResult(totalHits);
+  }
+
+  public List<Analysis> getAnalyses(Map<String, Object> filter, Map<String, Integer> page) {
+    val response = analysisRepository.getAnalyses(filter, page);
+    val hitStream = Arrays.stream(response.getHits().getHits());
+    return hitStream.map(AnalysisService::hitToAnalysis).collect(toUnmodifiableList());
   }
 
   public Analysis getAnalysisById(String analysisId) {

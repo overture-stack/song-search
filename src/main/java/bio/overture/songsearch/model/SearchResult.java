@@ -4,11 +4,11 @@ import java.util.List;
 import lombok.Value;
 
 @Value
-public class ProbeResult<T> {
+public class SearchResult<T> {
   List<T> content;
   Info info;
 
-  public ProbeResult(List<T> content, Boolean hasNextFrom, Long totalHits) {
+  public SearchResult(List<T> content, Boolean hasNextFrom, Long totalHits) {
     this.content = content;
     this.info = new Info(hasNextFrom, totalHits, content.size());
   }

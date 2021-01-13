@@ -18,13 +18,16 @@
 
 package bio.overture.songsearch.utils;
 
+import static java.util.stream.Collectors.toUnmodifiableList;
+
+import bio.overture.songsearch.model.Sort;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import lombok.val;
-import org.elasticsearch.index.query.AbstractQueryBuilder;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.TermQueryBuilder;
+import org.elasticsearch.index.query.*;
+import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.elasticsearch.search.sort.SortOrder;
 
 public class ElasticsearchQueryUtils {
   /**
@@ -45,6 +48,24 @@ public class ElasticsearchQueryUtils {
                     .getOrDefault(key, simpleTermQueryBuilderResolver(key))
                     .apply(value.toString())));
     return bool;
+  }
+
+  /**
+   * For each sorts, find its SortBuilder and add the sort order value then collect them all in a
+   * list
+   *
+   * @param sorts List of Sort objects
+   * @return List of FiledSortBuilder
+   */
+  public static List<FieldSortBuilder> sortsToEsSortBuilders(
+      Map<String, FieldSortBuilder> SORT_BUILDER_RESOLVER, List<Sort> sorts) {
+    return sorts.stream()
+        .map(
+            sort -> {
+              val sortBuilder = SORT_BUILDER_RESOLVER.get(sort.getFieldName());
+              return sortBuilder.order(SortOrder.fromString(sort.getOrder()));
+            })
+        .collect(toUnmodifiableList());
   }
 
   private static Function<String, AbstractQueryBuilder<?>> simpleTermQueryBuilderResolver(

@@ -18,11 +18,14 @@
 
 package bio.overture.songsearch.repository;
 
-import static bio.overture.songsearch.config.SearchFields.*;
-import static bio.overture.songsearch.utils.ElasticsearchQueryUtils.queryFromArgs;
+import static bio.overture.songsearch.config.constants.SearchFields.*;
+import static bio.overture.songsearch.utils.ElasticsearchQueryUtils.*;
+import static java.util.Collections.emptyList;
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
+import static org.elasticsearch.search.sort.SortOrder.ASC;
 
 import bio.overture.songsearch.config.ElasticsearchProperties;
+import bio.overture.songsearch.model.Sort;
 import com.google.common.collect.ImmutableMap;
 import java.util.*;
 import java.util.function.Function;
@@ -42,6 +45,8 @@ import org.elasticsearch.index.query.AbstractQueryBuilder;
 import org.elasticsearch.index.query.NestedQueryBuilder;
 import org.elasticsearch.index.query.TermQueryBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -50,6 +55,8 @@ import org.springframework.stereotype.Component;
 public class AnalysisRepository {
   private static final Map<String, Function<String, AbstractQueryBuilder<?>>> QUERY_RESOLVER =
       argumentPathMap();
+
+  private static final Map<String, FieldSortBuilder> SORT_BUILDER_RESOLVER = sortPathMap();
 
   private final RestHighLevelClient client;
   private final String analysisCentricIndex;
@@ -107,13 +114,28 @@ public class AnalysisRepository {
         .build();
   }
 
+  private static Map<String, FieldSortBuilder> sortPathMap() {
+    return ImmutableMap.<String, FieldSortBuilder>builder()
+        .put(ANALYSIS_ID, SortBuilders.fieldSort("analysis_id"))
+        .put(ANALYSIS_STATE, SortBuilders.fieldSort("analysis_state"))
+        .put(PUBLISHED_AT, SortBuilders.fieldSort("published_at"))
+        .put(UPDATED_AT, SortBuilders.fieldSort("updated_at"))
+        .put(FIRST_PUBLISHED_AT, SortBuilders.fieldSort("first_published_at"))
+        .build();
+  }
+
   public SearchResponse getAnalyses(Map<String, Object> filter, Map<String, Integer> page) {
+    return getAnalyses(filter, page, emptyList());
+  }
+
+  public SearchResponse getAnalyses(
+      Map<String, Object> filter, Map<String, Integer> page, List<Sort> sorts) {
     final AbstractQueryBuilder<?> query =
         (filter == null || filter.size() == 0)
             ? matchAllQuery()
             : queryFromArgs(QUERY_RESOLVER, filter);
 
-    val searchSourceBuilder = createSearchSourceBuilder(query, page);
+    val searchSourceBuilder = createSearchSourceBuilder(query, page, sorts);
 
     return execute(searchSourceBuilder);
   }
@@ -135,7 +157,20 @@ public class AnalysisRepository {
 
   private SearchSourceBuilder createSearchSourceBuilder(
       AbstractQueryBuilder<?> query, Map<String, Integer> page) {
+    return createSearchSourceBuilder(query, page, emptyList());
+  }
+
+  private SearchSourceBuilder createSearchSourceBuilder(
+      AbstractQueryBuilder<?> query, Map<String, Integer> page, List<Sort> sorts) {
     val searchSourceBuilder = new SearchSourceBuilder();
+
+    if (sorts.isEmpty()) {
+      searchSourceBuilder.sort(SORT_BUILDER_RESOLVER.get(UPDATED_AT).order(ASC));
+    } else {
+      val sortBuilders = sortsToEsSortBuilders(SORT_BUILDER_RESOLVER, sorts);
+      sortBuilders.forEach(searchSourceBuilder::sort);
+    }
+
     searchSourceBuilder.query(query);
 
     if (page != null && page.size() != 0) {

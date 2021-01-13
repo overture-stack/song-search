@@ -18,7 +18,7 @@
 
 package bio.overture.songsearch.repository;
 
-import static bio.overture.songsearch.config.SearchFields.*;
+import static bio.overture.songsearch.config.constants.SearchFields.*;
 import static bio.overture.songsearch.utils.ElasticsearchQueryUtils.queryFromArgs;
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 

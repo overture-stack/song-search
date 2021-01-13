@@ -18,7 +18,7 @@
 
 package bio.overture.songsearch.repository;
 
-import static bio.overture.songsearch.config.SearchFields.*;
+import static bio.overture.songsearch.config.constants.SearchFields.*;
 import static bio.overture.songsearch.utils.ElasticsearchQueryUtils.*;
 import static java.util.Collections.emptyList;
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
@@ -50,26 +50,28 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 public class AnalysisRepository {
-  private static final Map<String, String> ANALYSIS_QUERY_TO_ES_DOC_PATHS =
+  private static final Map<String, String> ANALYSIS_FIELD_TO_ES_DOC_PATHS =
       ImmutableMap.copyOf(
           Map.of(
               ANALYSIS_ID, "analysis_id",
               ANALYSIS_TYPE, "analysis_type",
-              ANALYSIS_VERSION,"analysis_version",
-              ANALYSIS_STATE,"analysis_state",
-              STUDY_ID,"study_id",
-              RUN_ID,"workflow.run_id"));
+              ANALYSIS_VERSION, "analysis_version",
+              ANALYSIS_STATE, "analysis_state",
+              STUDY_ID, "study_id",
+              RUN_ID, "workflow.run_id"));
 
-  private static final Map<String, NestedFieldPath> ANALYSIS_QUERY_TO_NESTED_ES_DOC_PATHS =
+  private static final Map<String, NestedFieldPath> ANALYSIS_FIELD_TO_NESTED_ES_DOC_PATHS =
       ImmutableMap.of(
-          DONOR_ID, new NestedFieldPath("donors", "donors.donor_id"),
-          SPECIMEN_ID, new NestedFieldPath("donors.specimens", "donors.specimens.specimen_id"),
+          DONOR_ID,
+          new NestedFieldPath("donors", "donors.donor_id"),
+          SPECIMEN_ID,
+          new NestedFieldPath("donors.specimens", "donors.specimens.specimen_id"),
           SAMPLE_ID,
           new NestedFieldPath("donors.specimens.samples", "donors.specimens.samples.sample_id"),
           MATCHED_NORMAL_SUBMITTER_SAMPLE_ID,
           new NestedFieldPath(
-          "donors.specimens.samples",
-          "donors.specimens.samples.matched_normal_submitter_sample_id"),
+              "donors.specimens.samples",
+              "donors.specimens.samples.matched_normal_submitter_sample_id"),
           SUBMITTER_SAMPLE_ID,
           new NestedFieldPath(
               "donors.specimens.samples", "donors.specimens.samples.submitter_sample_id"));
@@ -83,7 +85,7 @@ public class AnalysisRepository {
           FIRST_PUBLISHED_AT, "first_published_at");
 
   private static final Map<String, Function<String, AbstractQueryBuilder<?>>> QUERY_RESOLVER =
-      createQueryResolver(ANALYSIS_QUERY_TO_ES_DOC_PATHS, ANALYSIS_QUERY_TO_NESTED_ES_DOC_PATHS);
+      createQueryResolver(ANALYSIS_FIELD_TO_ES_DOC_PATHS, ANALYSIS_FIELD_TO_NESTED_ES_DOC_PATHS);
 
   private static final Map<String, FieldSortBuilder> SORT_BUILDER_RESOLVER =
       createFieldSortBuilderResolver(ANALYSIS_SORT_TO_ES_DOC_PATHS, Map.of());

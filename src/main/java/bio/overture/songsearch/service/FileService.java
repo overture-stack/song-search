@@ -18,7 +18,7 @@
 
 package bio.overture.songsearch.service;
 
-import static bio.overture.songsearch.config.SearchFields.FILE_OBJECT_ID;
+import static bio.overture.songsearch.config.constants.SearchFields.FILE_OBJECT_ID;
 import static java.util.stream.Collectors.toUnmodifiableList;
 
 import bio.overture.songsearch.model.File;

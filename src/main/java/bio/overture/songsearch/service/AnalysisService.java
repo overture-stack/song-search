@@ -18,7 +18,9 @@
 
 package bio.overture.songsearch.service;
 
-import static bio.overture.songsearch.config.SearchFields.*;
+import static bio.overture.songsearch.config.constants.EsDefaults.ES_PAGE_DEFAULT_FROM;
+import static bio.overture.songsearch.config.constants.EsDefaults.ES_PAGE_DEFAULT_SIZE;
+import static bio.overture.songsearch.config.constants.SearchFields.*;
 import static bio.overture.songsearch.model.enums.SpecimenType.NORMAL;
 import static bio.overture.songsearch.model.enums.SpecimenType.TUMOUR;
 import static java.util.Collections.emptyList;
@@ -56,8 +58,8 @@ public class AnalysisService {
     val responseSearchHits = response.getHits();
 
     val totalHits = responseSearchHits.getTotalHits().value;
-    val from = page.getOrDefault("from", 0);
-    val size = page.getOrDefault("size", 10);
+    val from = page.getOrDefault("from", ES_PAGE_DEFAULT_FROM);
+    val size = page.getOrDefault("size", ES_PAGE_DEFAULT_SIZE);
 
     val analyses =
         Arrays.stream(responseSearchHits.getHits())

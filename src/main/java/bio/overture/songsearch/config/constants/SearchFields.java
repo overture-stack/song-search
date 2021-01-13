@@ -16,7 +16,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package bio.overture.songsearch.config;
+package bio.overture.songsearch.config.constants;
 
 import static lombok.AccessLevel.PRIVATE;
 

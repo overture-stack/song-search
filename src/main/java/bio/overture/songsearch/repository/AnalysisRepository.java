@@ -142,7 +142,7 @@ public class AnalysisRepository {
     val searchSourceBuilder = new SearchSourceBuilder();
 
     if (sorts.isEmpty()) {
-      searchSourceBuilder.sort(SORT_BUILDER_RESOLVER.get(ANALYSIS_ID).order(ASC));
+      searchSourceBuilder.sort(SORT_BUILDER_RESOLVER.get(UPDATED_AT).order(ASC));
     } else {
       val sortBuilders = sortsToEsSortBuilders(SORT_BUILDER_RESOLVER, sorts);
       sortBuilders.forEach(searchSourceBuilder::sort);

@@ -12,6 +12,9 @@ type Analysis @key(fields: "analysisId") {
     analysisType: String
     analysisVersion: Int
     analysisState: AnalysisState
+    publishedAt: String
+    updatedAt: String
+    firstPublishedAt: String
     studyId: String
     donors: [Donor]
     files: [AnalysisFile]
@@ -149,8 +152,60 @@ type SampleMatchedAnalysisPair {
     tumourSampleAnalysis: Analysis
 }
 
+enum AnalysisSortField {
+    analysisId,
+    analysisState,
+    publishedAt,
+    updatedAt,
+    firstPublishedAt
+}
+
+enum FileSortField {
+    objectId,
+    fileAccess,
+    dataType,
+    name
+}
+
+enum SortOrder {
+    asc,
+    desc
+}
+
+input AnalysisSort {
+    fieldName: AnalysisSortField!
+    order: SortOrder!
+}
+
+input FileSort {
+    fieldName: FileSortField!
+    order: SortOrder!
+}
+
+type SearchResultInfo {
+    contentCount: String!
+    hasNextFrom: String!
+    totalHits: String!
+}
+
+type AnalysesSearchResult {
+    content: [Analysis!]
+    info: SearchResultInfo!
+}
+
+type FilesSearchResult {
+    content: [File!]
+    info: SearchResultInfo!
+}
+
+type AggregationResult {
+    totalHits: String!
+}
+
 extend type Query {
-    analyses(filter: AnalysisFilter, page: Page): [Analysis]
-    files(filter: FileFilter, page: Page): [File]
+    analyses(filter: AnalysisFilter, page: Page, sorts: [AnalysisSort!]): AnalysesSearchResult!
+    aggregateAnalyses(filter: AnalysisFilter): AggregationResult!
+    files(filter: FileFilter, page: Page, sorts: [FileSort!]): FilesSearchResult!
+    aggregateFiles(filter: FileFilter): AggregationResult!
     sampleMatchedAnalysisPairs(analysisId: String!): [SampleMatchedAnalysisPair]
 }

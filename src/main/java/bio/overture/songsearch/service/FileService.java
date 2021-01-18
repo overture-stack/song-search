@@ -18,10 +18,12 @@
 
 package bio.overture.songsearch.service;
 
-import static bio.overture.songsearch.config.SearchFields.FILE_OBJECT_ID;
+import static bio.overture.songsearch.config.constants.EsDefaults.ES_PAGE_DEFAULT_FROM;
+import static bio.overture.songsearch.config.constants.EsDefaults.ES_PAGE_DEFAULT_SIZE;
+import static bio.overture.songsearch.config.constants.SearchFields.FILE_OBJECT_ID;
 import static java.util.stream.Collectors.toUnmodifiableList;
 
-import bio.overture.songsearch.model.File;
+import bio.overture.songsearch.model.*;
 import bio.overture.songsearch.repository.FileRepository;
 import java.util.Arrays;
 import java.util.List;
@@ -43,6 +45,30 @@ public class FileService {
   private static File hitToFile(SearchHit hit) {
     val sourceMap = hit.getSourceAsMap();
     return File.parse(sourceMap);
+  }
+
+  public SearchResult<File> searchFiles(
+      Map<String, Object> filter, Map<String, Integer> page, List<Sort> sorts) {
+    val response = fileRepository.getFiles(filter, page, sorts);
+    val responseSearchHits = response.getHits();
+
+    val totalHits = responseSearchHits.getTotalHits().value;
+    val from = page.getOrDefault("from", ES_PAGE_DEFAULT_FROM);
+    val size = page.getOrDefault("size", ES_PAGE_DEFAULT_SIZE);
+
+    val analyses =
+        Arrays.stream(responseSearchHits.getHits())
+            .map(FileService::hitToFile)
+            .collect(toUnmodifiableList());
+    val nextFrom = (totalHits - from) / size > 0;
+    return new SearchResult<>(analyses, nextFrom, totalHits);
+  }
+
+  public AggregationResult aggregateFiles(Map<String, Object> filter) {
+    val response = fileRepository.getFiles(filter, Map.of(), List.of());
+    val responseSearchHits = response.getHits();
+    val totalHits = responseSearchHits.getTotalHits().value;
+    return new AggregationResult(totalHits);
   }
 
   public List<File> getFiles(Map<String, Object> filter, Map<String, Integer> page) {

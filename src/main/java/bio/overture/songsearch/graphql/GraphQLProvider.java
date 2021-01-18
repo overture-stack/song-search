@@ -127,7 +127,14 @@ public class GraphQLProvider {
         .type(
             newTypeWiring("Query")
                 .dataFetcher("analyses", analysisDataFetcher.getAnalysesDataFetcher()))
+        .type(
+            newTypeWiring("Query")
+                .dataFetcher(
+                    "aggregateAnalyses", analysisDataFetcher.getAggregateAnalysesDataFetcher()))
         .type(newTypeWiring("Query").dataFetcher("files", fileDataFetcher.getFilesDataFetcher()))
+        .type(
+            newTypeWiring("Query")
+                .dataFetcher("aggregateFiles", fileDataFetcher.getAggregateFilesDataFetcher()))
         .type(
             newTypeWiring("Query")
                 .dataFetcher(

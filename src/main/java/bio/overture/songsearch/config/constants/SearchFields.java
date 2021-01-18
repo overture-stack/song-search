@@ -16,7 +16,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package bio.overture.songsearch.config;
+package bio.overture.songsearch.config.constants;
 
 import static lombok.AccessLevel.PRIVATE;
 
@@ -39,4 +39,7 @@ public class SearchFields {
   public static final String SUBMITTER_SAMPLE_ID = "submitterSampleId";
   public static final String MATCHED_NORMAL_SUBMITTER_SAMPLE_ID = "matchedNormalSubmitterSampleId";
   public static final String RUN_ID = "runId";
+  public static final String PUBLISHED_AT = "publishedAt";
+  public static final String UPDATED_AT = "updatedAt";
+  public static final String FIRST_PUBLISHED_AT = "firstPublishedAt";
 }

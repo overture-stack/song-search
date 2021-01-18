@@ -18,8 +18,8 @@
 
 package bio.overture.songsearch.graphql;
 
-import static bio.overture.songsearch.config.SearchFields.ANALYSIS_ID;
-import static bio.overture.songsearch.config.SearchFields.RUN_ID;
+import static bio.overture.songsearch.config.constants.SearchFields.ANALYSIS_ID;
+import static bio.overture.songsearch.config.constants.SearchFields.RUN_ID;
 import static bio.overture.songsearch.utils.CommonUtils.asImmutableMap;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.stream.Collectors.toList;
